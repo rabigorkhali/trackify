@@ -19,6 +19,16 @@
 {{--        <!-- /Search -->--}}
 
         <ul class="navbar-nav flex-row align-items-center ms-auto">
+            <!-- Global Kanban -->
+            @if(hasPermission('/kanban', 'get'))
+                <li class="nav-item me-2 me-xl-0">
+                    <a class="nav-link" href="{{ route('kanban.index') }}" title="Global Kanban">
+                        <i class="ti ti-layout-kanban ti-md"></i>
+                    </a>
+                </li>
+            @endif
+            <!-- / Global Kanban -->
+
             <!-- Style Switcher -->
             <li class="nav-item dropdown-style-switcher dropdown me-2 me-xl-0">
                 <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">

@@ -26,6 +26,7 @@ use App\Http\Controllers\System\EmailController;
 use App\Http\Controllers\System\SmsController;
 use App\Http\Controllers\System\ProjectController;
 use App\Http\Controllers\System\TicketController;
+use App\Http\Controllers\System\TicketStatusController;
 use App\Http\Controllers\System\TicketCommentController;
 use App\Http\Controllers\System\TicketLabelController;
 use App\Http\Controllers\System\TicketChecklistController;
@@ -90,6 +91,10 @@ Route::prefix(getSystemPrefix())->middleware(['auth', 'permission.routes', 'log'
     Route::resource('/sms', SmsController::class);
     // Project Management Routes
     Route::resource('/projects', ProjectController::class);
+    
+    // Ticket Status Management
+    Route::resource('/ticket-statuses', TicketStatusController::class);
+    Route::post('/ticket-statuses-update-order', [TicketStatusController::class, 'updateOrder'])->name('ticket-statuses.update-order');
     
     // Global Kanban Board
     Route::get('/kanban', [TicketController::class, 'globalKanban'])->name('kanban.index');

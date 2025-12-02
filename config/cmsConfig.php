@@ -28,6 +28,8 @@ $emailUrl = '/emails';
 $smsUrl = '/sms';
 $projectUrl = '/projects';
 $ticketUrl = '/tickets';
+$ticketStatusUrl = '/ticket-statuses';
+$ticketLabelUrl = '/ticket-labels';
 
 return [
     // routes entered in this array are accessible by any user no matter what role is given
@@ -95,6 +97,13 @@ return [
                     'name' => 'Backup Project',
                     'route' => [
                         'url' => '/backup-project',
+                        'method' => $getMethod,
+                    ],
+                ],
+                [
+                    'name' => 'Generate Sitemap',
+                    'route' => [
+                        'url' => '/generate-sitemap',
                         'method' => $getMethod,
                     ],
                 ]
@@ -358,6 +367,15 @@ return [
                     'routeName' => 'email-management',
                     'routeIndexName' => 'emails.index',
                     'routeIndexNameMultipleSubMenu' => ['emails.index'], //use for opening sidenav menu only
+                    'permissions' => [
+                        [
+                            'name' => 'Access Email Management',
+                            'route' => [
+                                'url' => $emailUrl,
+                                'method' => $getMethod,
+                            ],
+                        ],
+                    ],
                     'submodules' => [
                         [
                             'name' => 'Emails',
@@ -513,6 +531,15 @@ return [
                     'routeName' => 'sms-management',
                     'routeIndexName' => 'sms.index',
                     'routeIndexNameMultipleSubMenu' => ['sms.index'], //use for opening sidenav menu only
+                    'permissions' => [
+                        [
+                            'name' => 'Access SMS Management',
+                            'route' => [
+                                'url' => $smsUrl,
+                                'method' => $getMethod,
+                            ],
+                        ],
+                    ],
                     'submodules' => [
                         [
                             'name' => 'SMS',
@@ -840,6 +867,15 @@ return [
                     'routeName' => 'posts',
                     'routeIndexName' => 'posts.index',
                     'routeIndexNameMultipleSubMenu' => ['post-categories.index', 'posts.index'],
+                    'permissions' => [
+                        [
+                            'name' => 'Access Posts',
+                            'route' => [
+                                'url' => $postUrl,
+                                'method' => $getMethod,
+                            ],
+                        ],
+                    ],
                     'submodules' => [
                         [
                             'name' => 'Categories',
@@ -1119,6 +1155,13 @@ return [
                                 'method' => $getMethod,
                             ],
                         ],
+                        [
+                            'name' => 'CKEditor Upload',
+                            'route' => [
+                                'url' => '/ckeditor-upload',
+                                'method' => $postMethod,
+                            ],
+                        ],
                     ],
                 ],
                 [
@@ -1128,6 +1171,15 @@ return [
                     'routeName' => 'settings',
                     'routeIndexName' => 'configs.index',
                     'routeIndexNameMultipleSubMenu' => ['configs.index', 'menus.index'],
+                    'permissions' => [
+                        [
+                            'name' => 'Access Settings',
+                            'route' => [
+                                'url' => $configBaseUrl,
+                                'method' => $getMethod,
+                            ],
+                        ],
+                    ],
                     'submodules' => [
                         [
                             'name' => 'Configs',
@@ -1261,7 +1313,7 @@ return [
             'icon' => "<i class='fa fa-tasks'></i>",
             'hasSubmodules' => true,
             'routeName' => 'project-management',
-            'routeIndexNameMultipleSubMenu' => ['projects.index', 'kanban.index'],
+            'routeIndexNameMultipleSubMenu' => ['projects.index', 'kanban.index', 'ticket-statuses.index', 'ticket-labels.index'],
             'submodules' => [
                 [
                     'name' => 'Projects',
@@ -1326,6 +1378,63 @@ return [
                             'route' => [
                                 'url' => '/kanban',
                                 'method' => $getMethod,
+                            ],
+                        ],
+                    ],
+                ],
+                [
+                    'name' => 'Ticket Status',
+                    'icon' => "<i class='fa fa-list-check'></i>",
+                    'hasSubmodules' => false,
+                    'route' => $ticketStatusUrl,
+                    'routeIndexName' => 'ticket-statuses.index',
+                    'routeName' => 'ticket-statuses',
+                    'permissions' => [
+                        [
+                            'name' => 'View Ticket Status',
+                            'route' => [
+                                'url' => $ticketStatusUrl,
+                                'method' => $getMethod,
+                            ],
+                        ],
+                        [
+                            'name' => 'Create Ticket Status',
+                            'route' => [
+                                [
+                                    'url' => $ticketStatusUrl . '/create',
+                                    'method' => $getMethod,
+                                ],
+                                [
+                                    'url' => $ticketStatusUrl,
+                                    'method' => $postMethod,
+                                ],
+                            ],
+                        ],
+                        [
+                            'name' => 'Edit Ticket Status',
+                            'route' => [
+                                [
+                                    'url' => $ticketStatusUrl . '/*/edit',
+                                    'method' => $getMethod,
+                                ],
+                                [
+                                    'url' => $ticketStatusUrl . '/*',
+                                    'method' => $putMethod,
+                                ],
+                            ],
+                        ],
+                        [
+                            'name' => 'Delete Ticket Status',
+                            'route' => [
+                                'url' => $ticketStatusUrl . '/*',
+                                'method' => $deleteMethod,
+                            ],
+                        ],
+                        [
+                            'name' => 'Update Ticket Status Order',
+                            'route' => [
+                                'url' => $ticketStatusUrl . '-update-order',
+                                'method' => $postMethod,
                             ],
                         ],
                     ],
@@ -1407,9 +1516,161 @@ return [
                                 'method' => $deleteMethod,
                             ],
                         ],
+                        [
+                            'name' => 'Update Ticket Status',
+                            'route' => [
+                                'url' => '/tickets-update-status',
+                                'method' => $postMethod,
+                            ],
+                        ],
+                        [
+                            'name' => 'Update Ticket Assignee',
+                            'route' => [
+                                'url' => '/tickets-update-assignee',
+                                'method' => $postMethod,
+                            ],
+                        ],
+                        [
+                            'name' => 'Attach Ticket Label',
+                            'route' => [
+                                'url' => $projectUrl . '/*/' . str_replace('/', '', $ticketUrl) . '/*/labels',
+                                'method' => $postMethod,
+                            ],
+                        ],
+                        [
+                            'name' => 'Detach Ticket Label',
+                            'route' => [
+                                'url' => $projectUrl . '/*/' . str_replace('/', '', $ticketUrl) . '/*/labels/*',
+                                'method' => $deleteMethod,
+                            ],
+                        ],
+                        [
+                            'name' => 'Add Ticket Checklist',
+                            'route' => [
+                                'url' => '/ticket-checklists',
+                                'method' => $postMethod,
+                            ],
+                        ],
+                        [
+                            'name' => 'Update Ticket Checklist',
+                            'route' => [
+                                'url' => '/ticket-checklists/*',
+                                'method' => $putMethod,
+                            ],
+                        ],
+                        [
+                            'name' => 'Delete Ticket Checklist',
+                            'route' => [
+                                'url' => '/ticket-checklists/*',
+                                'method' => $deleteMethod,
+                            ],
+                        ],
+                        [
+                            'name' => 'Add Ticket Watcher',
+                            'route' => [
+                                'url' => '/ticket-watchers',
+                                'method' => $postMethod,
+                            ],
+                        ],
+                        [
+                            'name' => 'Remove Ticket Watcher',
+                            'route' => [
+                                'url' => '/ticket-watchers',
+                                'method' => $deleteMethod,
+                            ],
+                        ],
+                        [
+                            'name' => 'Add Time Log',
+                            'route' => [
+                                'url' => '/time-logs',
+                                'method' => $postMethod,
+                            ],
+                        ],
+                        [
+                            'name' => 'Update Time Log',
+                            'route' => [
+                                'url' => '/time-logs/*',
+                                'method' => $putMethod,
+                            ],
+                        ],
+                        [
+                            'name' => 'Delete Time Log',
+                            'route' => [
+                                'url' => '/time-logs/*',
+                                'method' => $deleteMethod,
+                            ],
+                        ],
+                    ],
+                ],
+                [
+                    'name' => 'Ticket Labels',
+                    'icon' => "<i class='fa fa-tags'></i>",
+                    'hasSubmodules' => false,
+                    'route' => $ticketLabelUrl,
+                    'routeIndexName' => 'ticket-labels.index',
+                    'routeName' => 'ticket-labels',
+                    'permissions' => [
+                        [
+                            'name' => 'View Ticket Labels',
+                            'route' => [
+                                'url' => $ticketLabelUrl,
+                                'method' => $getMethod,
+                            ],
+                        ],
+                        [
+                            'name' => 'Create Ticket Label',
+                            'route' => [
+                                [
+                                    'url' => $ticketLabelUrl . '/create',
+                                    'method' => $getMethod,
+                                ],
+                                [
+                                    'url' => $ticketLabelUrl,
+                                    'method' => $postMethod,
+                                ],
+                            ],
+                        ],
+                        [
+                            'name' => 'Edit Ticket Label',
+                            'route' => [
+                                [
+                                    'url' => $ticketLabelUrl . '/*/edit',
+                                    'method' => $getMethod,
+                                ],
+                                [
+                                    'url' => $ticketLabelUrl . '/*',
+                                    'method' => $putMethod,
+                                ],
+                            ],
+                        ],
+                        [
+                            'name' => 'Delete Ticket Label',
+                            'route' => [
+                                'url' => $ticketLabelUrl . '/*',
+                                'method' => $deleteMethod,
+                            ],
+                        ],
                     ],
                 ],
             ],
         ],
+    ],
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Default Ticket Statuses
+    |--------------------------------------------------------------------------
+    |
+    | These are the default ticket statuses that will be seeded when you run
+    | the TicketStatusSeeder. You can modify these statuses or add new ones.
+    | Each status should have: name, color (hex), order, and status (1=active, 0=inactive)
+    |
+    */
+    'default_ticket_statuses' => [
+        ['name' => 'To Do', 'color' => '#6c757d', 'order' => 1, 'status' => 1],
+        ['name' => 'In Progress', 'color' => '#0d6efd', 'order' => 2, 'status' => 1],
+        ['name' => 'In Review', 'color' => '#ffc107', 'order' => 3, 'status' => 1],
+        ['name' => 'Done', 'color' => '#198754', 'order' => 4, 'status' => 1],
+        ['name' => 'Blocked', 'color' => '#dc3545', 'order' => 5, 'status' => 1],
     ],
 ];
