@@ -32,6 +32,7 @@ use App\Http\Controllers\System\TicketLabelController;
 use App\Http\Controllers\System\TicketChecklistController;
 use App\Http\Controllers\System\TicketWatcherController;
 use App\Http\Controllers\System\TimeLogController;
+use App\Http\Controllers\System\NotificationController;
 
 //Route::get('/', function () {
 //    return view('index');
@@ -129,4 +130,13 @@ Route::prefix(getSystemPrefix())->middleware(['auth', 'permission.routes', 'log'
     Route::post('/time-logs', [TimeLogController::class, 'store'])->name('time-logs.store');
     Route::put('/time-logs/{timeLog}', [TimeLogController::class, 'update'])->name('time-logs.update');
     Route::delete('/time-logs/{timeLog}', [TimeLogController::class, 'destroy'])->name('time-logs.destroy');
+    
+    // Notifications
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/recent', [NotificationController::class, 'getRecent'])->name('notifications.recent');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount'])->name('notifications.unread-count');
+    Route::post('/notifications/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+    Route::post('/notifications/clear-read', [NotificationController::class, 'clearRead'])->name('notifications.clear-read');
 });

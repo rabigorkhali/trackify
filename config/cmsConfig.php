@@ -62,6 +62,35 @@ return [
             'url' => '/change-password',
             'method' => $putMethod,
         ],
+        // Notification routes - accessible to all authenticated users
+        [
+            'url' => '/notifications',
+            'method' => $getMethod,
+        ],
+        [
+            'url' => '/notifications/recent',
+            'method' => $getMethod,
+        ],
+        [
+            'url' => '/notifications/unread-count',
+            'method' => $getMethod,
+        ],
+        [
+            'url' => '/notifications/*/mark-read',
+            'method' => $postMethod,
+        ],
+        [
+            'url' => '/notifications/mark-all-read',
+            'method' => $postMethod,
+        ],
+        [
+            'url' => '/notifications/*',
+            'method' => $deleteMethod,
+        ],
+        [
+            'url' => '/notifications/clear-read',
+            'method' => $postMethod,
+        ],
 
     ],
 

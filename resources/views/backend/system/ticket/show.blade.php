@@ -138,8 +138,10 @@
                                 <form id="addCommentForm" class="mb-4">
                                     @csrf
                                     <input type="hidden" name="ticket_id" value="{{ $thisData->id }}">
-                                    <div class="mb-2">
-                                        <textarea name="comment" id="comment-text" rows="3" class="form-control" placeholder="Add a comment..." required></textarea>
+                                    <div class="mb-2 position-relative">
+                                        <textarea name="comment" id="comment-text" rows="3" class="form-control" placeholder="Add a comment... (Type @ to mention someone)" required></textarea>
+                                        <!-- Mention Dropdown -->
+                                        <div id="mention-dropdown" class="position-absolute bg-white border rounded shadow-sm" style="display: none; max-height: 200px; overflow-y: auto; z-index: 1000; width: 250px;"></div>
                                     </div>
                                     <button type="submit" class="btn btn-primary btn-sm">
                                         <i class="ti ti-send me-1"></i>Post Comment
@@ -561,21 +563,176 @@
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
 const ticketId = {{ $thisData->id }};
 
+// User mention autocomplete
+const users = @json(\App\Models\User::select('id', 'name', 'email')->get());
+const commentTextarea = document.getElementById('comment-text');
+const mentionDropdown = document.getElementById('mention-dropdown');
+let mentionActive = false;
+let mentionStart = 0;
+let selectedMentionIndex = -1;
+
+commentTextarea?.addEventListener('input', function(e) {
+    const cursorPos = this.selectionStart;
+    const textBeforeCursor = this.value.substring(0, cursorPos);
+    const lastAtSymbol = textBeforeCursor.lastIndexOf('@');
+    
+    if (lastAtSymbol !== -1) {
+        const textAfterAt = textBeforeCursor.substring(lastAtSymbol + 1);
+        
+        // Check if we're still in a mention (no spaces after @)
+        if (!textAfterAt.includes(' ') && !textAfterAt.includes('\n')) {
+            mentionActive = true;
+            mentionStart = lastAtSymbol;
+            const searchTerm = textAfterAt.toLowerCase();
+            
+            // Filter users
+            const filteredUsers = users.filter(user => 
+                user.name.toLowerCase().includes(searchTerm) || 
+                user.email.toLowerCase().includes(searchTerm)
+            ).slice(0, 5);
+            
+            if (filteredUsers.length > 0) {
+                showMentionDropdown(filteredUsers, lastAtSymbol);
+            } else {
+                hideMentionDropdown();
+            }
+        } else {
+            hideMentionDropdown();
+        }
+    } else {
+        hideMentionDropdown();
+    }
+});
+
+commentTextarea?.addEventListener('keydown', function(e) {
+    if (!mentionActive || mentionDropdown.style.display === 'none') return;
+    
+    const items = mentionDropdown.querySelectorAll('.mention-item');
+    
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        selectedMentionIndex = Math.min(selectedMentionIndex + 1, items.length - 1);
+        updateMentionSelection(items);
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        selectedMentionIndex = Math.max(selectedMentionIndex - 1, 0);
+        updateMentionSelection(items);
+    } else if (e.key === 'Enter' && selectedMentionIndex >= 0) {
+        e.preventDefault();
+        items[selectedMentionIndex].click();
+    } else if (e.key === 'Escape') {
+        hideMentionDropdown();
+    }
+});
+
+function showMentionDropdown(filteredUsers, atPosition) {
+    selectedMentionIndex = 0;
+    mentionDropdown.innerHTML = '';
+    
+    filteredUsers.forEach((user, index) => {
+        const div = document.createElement('div');
+        div.className = 'mention-item p-2 cursor-pointer' + (index === 0 ? ' selected' : '');
+        div.innerHTML = `
+            <div class="d-flex align-items-center">
+                <div class="avatar avatar-xs me-2">
+                    <span class="avatar-initial rounded-circle bg-label-primary">
+                        ${user.name.substring(0, 2).toUpperCase()}
+                    </span>
+                </div>
+                <div>
+                    <div class="fw-semibold">${user.name}</div>
+                    <small class="text-muted">${user.email}</small>
+                </div>
+            </div>
+        `;
+        
+        div.addEventListener('click', function() {
+            insertMention(user.name);
+            hideMentionDropdown();
+        });
+        
+        div.addEventListener('mouseenter', function() {
+            selectedMentionIndex = index;
+            updateMentionSelection(mentionDropdown.querySelectorAll('.mention-item'));
+        });
+        
+        mentionDropdown.appendChild(div);
+    });
+    
+    // Position dropdown
+    const rect = commentTextarea.getBoundingClientRect();
+    const lines = commentTextarea.value.substring(0, mentionStart).split('\n').length;
+    mentionDropdown.style.top = (lines * 20 + 5) + 'px';
+    mentionDropdown.style.left = '10px';
+    mentionDropdown.style.display = 'block';
+}
+
+function hideMentionDropdown() {
+    mentionDropdown.style.display = 'none';
+    mentionActive = false;
+    selectedMentionIndex = -1;
+}
+
+function updateMentionSelection(items) {
+    items.forEach((item, index) => {
+        if (index === selectedMentionIndex) {
+            item.classList.add('selected', 'bg-light');
+        } else {
+            item.classList.remove('selected', 'bg-light');
+        }
+    });
+}
+
+function insertMention(userName) {
+    const cursorPos = commentTextarea.selectionStart;
+    const textBefore = commentTextarea.value.substring(0, mentionStart);
+    const textAfter = commentTextarea.value.substring(cursorPos);
+    const mentionText = userName.replace(/\s+/g, '');
+    
+    commentTextarea.value = textBefore + '@' + mentionText + ' ' + textAfter;
+    
+    // Set cursor position after mention
+    const newCursorPos = mentionStart + mentionText.length + 2;
+    commentTextarea.setSelectionRange(newCursorPos, newCursorPos);
+    commentTextarea.focus();
+}
+
+// Click outside to close dropdown
+document.addEventListener('click', function(e) {
+    if (e.target !== commentTextarea && !mentionDropdown.contains(e.target)) {
+        hideMentionDropdown();
+    }
+});
+
 // Add Comment
 document.getElementById('addCommentForm')?.addEventListener('submit', function(e) {
     e.preventDefault();
     const formData = new FormData(this);
+    
+    console.log('Submitting comment...');
     
     fetch('{{ route("ticket-comments.store") }}', {
         method: 'POST',
         headers: {'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json'},
         body: formData
     })
-    .then(r => r.json())
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
     .then(data => {
+        console.log('Response data:', data);
         if (data.success) {
+            console.log('Comment added successfully, reloading...');
             location.reload();
+        } else {
+            console.error('Failed to add comment:', data);
+            alert('Failed to add comment: ' + (data.message || 'Unknown error'));
         }
+    })
+    .catch(error => {
+        console.error('Error adding comment:', error);
+        alert('Error adding comment. Check console for details.');
     });
 });
 
@@ -700,6 +857,22 @@ document.getElementById('logTimeForm')?.addEventListener('submit', function(e) {
 .comment-item:hover, .watcher-item:hover {
     background: #f8f9fa;
     border-radius: 6px;
+}
+/* Mention Autocomplete Styles */
+#mention-dropdown {
+    max-width: 300px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+.mention-item {
+    cursor: pointer;
+    transition: background 0.2s;
+    border-bottom: 1px solid #f0f0f0;
+}
+.mention-item:last-child {
+    border-bottom: none;
+}
+.mention-item:hover, .mention-item.selected {
+    background-color: #f8f9fa;
 }
 </style>
 @endsection

@@ -4,13 +4,17 @@ namespace App\Http\Controllers\System;
 
 use App\Http\Controllers\ResourceController;
 use App\Services\TicketService;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 
 class TicketController extends ResourceController
 {
-    public function __construct(private readonly TicketService $thisService)
+    protected $notificationService;
+
+    public function __construct(private readonly TicketService $thisService, NotificationService $notificationService)
     {
         parent::__construct($thisService);
+        $this->notificationService = $notificationService;
     }
 
     public function storeValidationRequest()
@@ -288,6 +292,9 @@ class TicketController extends ResourceController
                 'new_value' => ['status_id' => $ticket->ticket_status_id, 'status_name' => $ticket->ticketStatus->name],
             ]);
 
+            // Send notification
+            $this->notificationService->notifyStatusChange($ticket, $oldStatus->name, $ticket->ticketStatus->name, auth()->id());
+
             return response()->json([
                 'success' => true,
                 'message' => 'Ticket status updated successfully'
@@ -329,6 +336,9 @@ class TicketController extends ResourceController
                 'old_value' => ['assignee_id' => $oldAssignee?->id, 'assignee_name' => $oldAssigneeName],
                 'new_value' => ['assignee_id' => $ticket->assignee_id, 'assignee_name' => $newAssigneeName],
             ]);
+
+            // Send notification
+            $this->notificationService->notifyTicketAssignment($ticket, auth()->id());
 
             return response()->json([
                 'success' => true,

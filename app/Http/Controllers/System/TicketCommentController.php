@@ -4,13 +4,17 @@ namespace App\Http\Controllers\System;
 
 use App\Http\Controllers\Controller;
 use App\Services\TicketCommentService;
+use App\Services\NotificationService;
 use App\Http\Requests\System\TicketCommentRequest;
 use Illuminate\Http\Request;
 
 class TicketCommentController extends Controller
 {
-    public function __construct(private readonly TicketCommentService $ticketCommentService)
+    protected $notificationService;
+
+    public function __construct(private readonly TicketCommentService $ticketCommentService, NotificationService $notificationService)
     {
+        $this->notificationService = $notificationService;
     }
 
     /**
@@ -19,13 +23,30 @@ class TicketCommentController extends Controller
     public function store(TicketCommentRequest $request)
     {
         try {
+            \Log::info('TicketCommentController: Storing comment', [
+                'ticket_id' => $request->ticket_id,
+                'comment' => $request->comment,
+                'user_id' => auth()->id()
+            ]);
+            
             $comment = $this->ticketCommentService->store($request);
+            $ticket = \App\Models\Ticket::find($comment->ticket_id);
+            
+            \Log::info('TicketCommentController: Comment stored', [
+                'comment_id' => $comment->id,
+                'ticket_id' => $ticket->id
+            ]);
+            
+            // Send notification to assignee and watchers about new comment
+            $this->notificationService->notifyNewComment($ticket, $comment->comment, auth()->id());
+            
+            // Check for mentions in comment
+            $this->notificationService->notifyMentions($comment->comment, $ticket, 'comment');
             
             // Handle mentions - send notifications and emails
             if ($request->has('mentioned_users')) {
                 $mentionedUserIds = json_decode($request->mentioned_users, true);
                 if (!empty($mentionedUserIds)) {
-                    $ticket = \App\Models\Ticket::find($comment->ticket_id);
                     $commenter = auth()->user();
                     
                     foreach ($mentionedUserIds as $userId) {
