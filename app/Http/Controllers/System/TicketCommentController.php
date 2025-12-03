@@ -105,13 +105,64 @@ class TicketCommentController extends Controller
     /**
      * Delete a comment
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         try {
-            $request = app()->make(Request::class);
-            $this->ticketCommentService->delete($request, $id);
+            $comment = \App\Models\TicketComment::findOrFail($id);
+            
+            // Check if user is the comment owner
+            if ($comment->user_id !== auth()->id()) {
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'You can only delete your own comments'
+                    ], 403);
+                }
+                return redirect()->back()->withErrors(['error' => 'You can only delete your own comments.']);
+            }
+            
+            // Delete attachments from storage if they exist
+            if ($comment->attachments && is_array($comment->attachments)) {
+                foreach ($comment->attachments as $attachment) {
+                    $filePath = is_array($attachment) ? ($attachment['path'] ?? '') : $attachment;
+                    if ($filePath) {
+                        $fullPath = public_path($filePath);
+                        if (file_exists($fullPath)) {
+                            unlink($fullPath);
+                            \Log::info('Deleted attachment file: ' . $filePath);
+                        }
+                    }
+                }
+            }
+            
+            // Delete the comment
+            $comment->delete();
+            
+            \Log::info('Comment deleted', [
+                'comment_id' => $id,
+                'ticket_id' => $comment->ticket_id,
+                'user_id' => auth()->id()
+            ]);
+            
+            // Return JSON for AJAX requests
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Comment deleted successfully'
+                ]);
+            }
+            
             return redirect()->back()->withErrors(['success' => 'Comment deleted successfully.']);
         } catch (\Throwable $th) {
+            \Log::error('Error deleting comment: ' . $th->getMessage());
+            
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $th->getMessage() ?? 'Something went wrong'
+                ], 400);
+            }
+            
             return redirect()->back()->withErrors(['error' => $th->getMessage() ?? 'Something went wrong.']);
         }
     }

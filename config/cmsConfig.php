@@ -91,6 +91,19 @@ return [
             'url' => '/notifications/clear-read',
             'method' => $postMethod,
         ],
+        // Ticket attachment routes - accessible to all authenticated users
+        [
+            'url' => $projectUrl . '/*/' . str_replace('/', '', $ticketUrl) . '/*/upload-attachments',
+            'method' => $postMethod,
+        ],
+        [
+            'url' => $ticketUrl . '/*/upload-attachments',
+            'method' => $postMethod,
+        ],
+        [
+            'url' => '/ticket-attachments/*',
+            'method' => $deleteMethod,
+        ],
 
     ],
 
@@ -1626,6 +1639,20 @@ return [
                             'name' => 'Delete Time Log',
                             'route' => [
                                 'url' => '/time-logs/*',
+                                'method' => $deleteMethod,
+                            ],
+                        ],
+                        [
+                            'name' => 'Upload Ticket Attachments',
+                            'route' => [
+                                'url' => $projectUrl . '/*/' . str_replace('/', '', $ticketUrl) . '/*/upload-attachments',
+                                'method' => $postMethod,
+                            ],
+                        ],
+                        [
+                            'name' => 'Delete Ticket Attachments',
+                            'route' => [
+                                'url' => '/ticket-attachments/*',
                                 'method' => $deleteMethod,
                             ],
                         ],

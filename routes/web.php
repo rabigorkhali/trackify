@@ -33,6 +33,7 @@ use App\Http\Controllers\System\TicketChecklistController;
 use App\Http\Controllers\System\TicketWatcherController;
 use App\Http\Controllers\System\TimeLogController;
 use App\Http\Controllers\System\NotificationController;
+use App\Http\Controllers\System\TicketAttachmentController;
 
 //Route::get('/', function () {
 //    return view('index');
@@ -130,6 +131,10 @@ Route::prefix(getSystemPrefix())->middleware(['auth', 'permission.routes', 'log'
     Route::post('/time-logs', [TimeLogController::class, 'store'])->name('time-logs.store');
     Route::put('/time-logs/{timeLog}', [TimeLogController::class, 'update'])->name('time-logs.update');
     Route::delete('/time-logs/{timeLog}', [TimeLogController::class, 'destroy'])->name('time-logs.destroy');
+    
+    // Ticket Attachments
+    Route::post('/tickets/{ticket}/upload-attachments', [TicketAttachmentController::class, 'upload'])->name('tickets.upload-attachments');
+    Route::delete('/ticket-attachments/{attachment}', [TicketAttachmentController::class, 'destroy'])->name('ticket-attachments.destroy');
     
     // Notifications
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');

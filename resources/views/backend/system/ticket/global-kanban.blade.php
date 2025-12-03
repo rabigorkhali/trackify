@@ -303,8 +303,41 @@
                             <div class="p-4">
                                 <!-- Description -->
                                 <div class="mb-4">
-                                    <h6 class="mb-2"><i class="ti ti-file-text me-1"></i>Description</h6>
-                                    <div id="view_ticket_description" class="text-muted" style="white-space: pre-wrap;">No description provided</div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="mb-0"><i class="ti ti-file-text me-1"></i>Description</h6>
+                                        <button type="button" class="btn btn-sm btn-icon" id="toggle-description-edit" title="Edit description">
+                                            <i class="ti ti-pencil"></i>
+                                        </button>
+                                    </div>
+                                    <div id="view_ticket_description" class="p-3 bg-light rounded text-muted" style="white-space: pre-wrap; min-height: 80px; display: block;">No description provided</div>
+                                    <div id="edit_ticket_description_container" style="display: none;">
+                                        <div id="description-editor" style="min-height: 200px;"></div>
+                                        <div class="d-flex gap-2 mt-2">
+                                            <button type="button" class="btn btn-sm btn-primary" onclick="saveDescription()">
+                                                <i class="ti ti-check me-1"></i>Save
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="cancelDescriptionEdit()">
+                                                <i class="ti ti-x me-1"></i>Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Ticket Attachments -->
+                                <div class="mb-4">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="mb-0"><i class="ti ti-paperclip me-1"></i>Ticket Attachments <span class="badge bg-label-secondary" id="attachments_count">0</span></h6>
+                                        <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('ticket_attachments_input').click()">
+                                            <i class="ti ti-upload me-1"></i>Upload
+                                        </button>
+                                    </div>
+                                    <input type="file" id="ticket_attachments_input" multiple 
+                                           accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt,.xlsx,.xls,.zip"
+                                           style="display: none;" 
+                                           onchange="uploadTicketAttachments()">
+                                    <div id="ticket_attachments_list">
+                                        <!-- Attachments will be loaded here -->
+                                    </div>
                                 </div>
 
                                 <!-- Comments Section -->
@@ -568,6 +601,9 @@
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tributejs@5.1.3/dist/tribute.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tributejs@5.1.3/dist/tribute.css">
+<!-- Quill Rich Text Editor -->
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const kanbanLists = document.querySelectorAll('.kanban-list');
@@ -580,6 +616,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize Tribute.js for @mentions
     let tribute = null;
+    
+    // Quill editor instance for description
+    let descriptionQuill = null;
     
     function initializeMentions() {
         const commentTextarea = document.getElementById('new_comment');
@@ -801,7 +840,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('view_project_name').textContent = ticket.project?.name || 'N/A';
                 
                 // Populate description
-                document.getElementById('view_ticket_description').textContent = ticket.description || 'No description provided';
+                const descriptionText = ticket.description || 'No description provided';
+                document.getElementById('view_ticket_description').textContent = descriptionText;
+                
+                // Store description for later use
+                window.currentTicketDescription = ticket.description || '';
+                
+                // Load ticket attachments
+                displayTicketAttachments(ticket.attachments || []);
                 
                 // Populate form fields
                 document.getElementById('edit_ticket_id').value = ticket.id;
@@ -894,6 +940,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function displayComments(comments) {
         const commentsList = document.getElementById('comments_list');
         const commentsCount = document.getElementById('comments_count');
+        const currentUserId = {{ auth()->id() }};
         
         commentsCount.textContent = comments.length;
         
@@ -905,8 +952,10 @@ document.addEventListener('DOMContentLoaded', function() {
         let html = '';
         comments.forEach(comment => {
             const userProfileUrl = `/{{ getSystemPrefix() }}/users/${comment.user.id}`;
+            const canDelete = currentUserId === comment.user.id;
+            
             html += `
-                <div class="mb-3 pb-3 border-bottom">
+                <div class="mb-3 pb-3 border-bottom comment-item-${comment.id}">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <div class="d-flex align-items-center gap-2">
                             <a href="${userProfileUrl}" target="_blank" class="text-decoration-none">
@@ -923,11 +972,21 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div class="text-muted" style="font-size: 0.75rem;">${new Date(comment.created_at).toLocaleString()}</div>
                             </div>
                         </div>
+                        ${canDelete ? `
+                            <button type="button" class="btn btn-sm btn-icon btn-outline-danger" 
+                                    onclick="deleteComment(${comment.id}, ${comment.ticket_id})"
+                                    title="Delete comment">
+                                <i class="ti ti-trash"></i>
+                            </button>
+                        ` : ''}
                     </div>
                     <div class="ms-4 ps-2">
                         <p class="mb-2" style="white-space: pre-wrap;">${formatMentions(comment.comment)}</p>
                         ${comment.attachments && comment.attachments.length > 0 ? `
                             <div class="mt-2">
+                                <small class="text-muted d-block mb-2">
+                                    <i class="ti ti-paperclip me-1"></i>Attachments (${comment.attachments.length})
+                                </small>
                                 <div class="d-flex flex-wrap gap-2">
                                     ${comment.attachments.map(attachment => {
                                         const isImage = attachment.type && attachment.type.startsWith('image/');
@@ -946,8 +1005,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                             `;
                                         } else {
                                             return `
-                                                <a href="/${attachment.path}" target="_blank" class="btn btn-sm btn-label-secondary" title="${fileName}">
-                                                    <i class="ti ti-file me-1"></i>${fileName.length > 15 ? fileName.substring(0, 15) + '...' : fileName}
+                                                <a href="/${attachment.path}" download="${fileName}" class="btn btn-sm btn-label-secondary d-flex align-items-center gap-1" title="Download ${fileName}">
+                                                    <i class="ti ti-download"></i>
+                                                    <span>${fileName.length > 15 ? fileName.substring(0, 15) + '...' : fileName}</span>
                                                 </a>
                                             `;
                                         }
@@ -962,6 +1022,265 @@ document.addEventListener('DOMContentLoaded', function() {
         
         commentsList.innerHTML = html;
     }
+
+    // Toggle Description Edit Mode
+    document.body.addEventListener('click', function(e) {
+        if (e.target.id === 'toggle-description-edit' || e.target.closest('#toggle-description-edit')) {
+            const viewDiv = document.getElementById('view_ticket_description');
+            const editContainer = document.getElementById('edit_ticket_description_container');
+            const currentDescription = window.currentTicketDescription || '';
+            
+            viewDiv.style.display = 'none';
+            editContainer.style.display = 'block';
+            
+            // Initialize Quill editor if not already initialized
+            if (!descriptionQuill) {
+                descriptionQuill = new Quill('#description-editor', {
+                    theme: 'snow',
+                    placeholder: 'Enter ticket description...',
+                    modules: {
+                        toolbar: [
+                            ['bold', 'italic', 'underline', 'strike'],
+                            ['blockquote', 'code-block'],
+                            [{ 'header': [1, 2, 3, false] }],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            [{ 'color': [] }, { 'background': [] }],
+                            ['link'],
+                            ['clean']
+                        ]
+                    }
+                });
+            }
+            
+            // Set current content
+            if (currentDescription && currentDescription.trim() !== '') {
+                descriptionQuill.root.innerHTML = currentDescription.replace(/\n/g, '<br>');
+            } else {
+                descriptionQuill.setText('');
+            }
+            
+            descriptionQuill.focus();
+        }
+    });
+
+    // Save Description
+    window.saveDescription = function() {
+        if (!descriptionQuill) return;
+        
+        const ticketId = document.getElementById('edit_ticket_id').value;
+        const projectId = document.getElementById('edit_project_id').value;
+        const htmlContent = descriptionQuill.root.innerHTML.trim();
+        
+        // Convert HTML to plain text for backend
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlContent;
+        const plainText = tempDiv.innerText || tempDiv.textContent || '';
+        
+        updateTicketField(ticketId, projectId, 'description', plainText);
+        
+        // Update UI
+        setTimeout(() => {
+            document.getElementById('view_ticket_description').innerHTML = htmlContent || 'No description provided';
+            window.currentTicketDescription = plainText;
+            cancelDescriptionEdit();
+        }, 500);
+    };
+
+    // Cancel Description Edit
+    window.cancelDescriptionEdit = function() {
+        document.getElementById('view_ticket_description').style.display = 'block';
+        document.getElementById('edit_ticket_description_container').style.display = 'none';
+    };
+
+    // Display Ticket Attachments
+    function displayTicketAttachments(attachments) {
+        const attachmentsList = document.getElementById('ticket_attachments_list');
+        const attachmentsCount = document.getElementById('attachments_count');
+        
+        attachmentsCount.textContent = attachments.length;
+        
+        if (attachments.length === 0) {
+            attachmentsList.innerHTML = '<div class="text-muted small text-center py-3">No attachments yet. Click Upload to add files.</div>';
+            return;
+        }
+        
+        let html = '<div class="row g-2">';
+        attachments.forEach(attachment => {
+            const fileName = attachment.file_name || 'file';
+            const filePath = attachment.file_path || '';
+            const extension = fileName.split('.').pop()?.toLowerCase() || '';
+            const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension);
+            
+            if (isImage) {
+                html += `
+                    <div class="col-md-4">
+                        <div class="position-relative">
+                            <a href="/${filePath}" target="_blank">
+                                <img src="/${filePath}" alt="${fileName}" 
+                                     class="img-thumbnail w-100" 
+                                     style="height: 120px; object-fit: cover; cursor: pointer;"
+                                     title="${fileName}">
+                            </a>
+                            <button type="button" class="btn btn-sm btn-danger position-absolute" 
+                                    style="top: 5px; right: 5px; padding: 2px 6px;"
+                                    onclick="deleteTicketAttachment(${attachment.id})"
+                                    title="Delete ${fileName}">
+                                <i class="ti ti-trash" style="font-size: 0.75rem;"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted d-block mt-1 text-truncate" title="${fileName}">${fileName}</small>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center gap-2 p-2 border rounded bg-white">
+                            <i class="ti ti-file text-primary"></i>
+                            <a href="/${filePath}" download="${fileName}" class="text-truncate flex-grow-1" title="${fileName}">
+                                ${fileName.length > 30 ? fileName.substring(0, 30) + '...' : fileName}
+                            </a>
+                            <button type="button" class="btn btn-sm btn-icon btn-outline-danger" 
+                                    onclick="deleteTicketAttachment(${attachment.id})"
+                                    title="Delete">
+                                <i class="ti ti-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+        html += '</div>';
+        
+        attachmentsList.innerHTML = html;
+    }
+
+    // Upload Ticket Attachments
+    window.uploadTicketAttachments = function() {
+        const input = document.getElementById('ticket_attachments_input');
+        const ticketId = document.getElementById('edit_ticket_id').value;
+        const projectId = document.getElementById('edit_project_id').value;
+        
+        if (!input.files || input.files.length === 0) {
+            return;
+        }
+        
+        const formData = new FormData();
+        
+        // Add all selected files
+        Array.from(input.files).forEach(file => {
+            formData.append('attachments[]', file);
+        });
+        formData.append('ticket_id', ticketId);
+        
+        showNotification(`Uploading ${input.files.length} file(s)...`, 'info');
+        
+        fetch(`/{{ getSystemPrefix() }}/tickets/${ticketId}/upload-attachments`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Files uploaded successfully', 'success');
+                input.value = '';
+                // Reload ticket details
+                loadTicketDetails(ticketId, projectId);
+            } else {
+                showNotification(data.message || 'Failed to upload files', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Failed to upload files. Make sure route exists.', 'error');
+        });
+    };
+
+    // Delete Ticket Attachment
+    window.deleteTicketAttachment = function(attachmentId) {
+        if (!confirm('Delete this attachment permanently?')) {
+            return;
+        }
+        
+        const ticketId = document.getElementById('edit_ticket_id').value;
+        const projectId = document.getElementById('edit_project_id').value;
+        
+        showNotification('Deleting attachment...', 'info');
+        
+        fetch(`/{{ getSystemPrefix() }}/ticket-attachments/${attachmentId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Attachment deleted successfully', 'success');
+                loadTicketDetails(ticketId, projectId);
+            } else {
+                showNotification(data.message || 'Failed to delete attachment', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Failed to delete attachment', 'error');
+        });
+    };
+
+    // Delete Comment
+    window.deleteComment = function(commentId, ticketId) {
+        if (!confirm('Are you sure you want to delete this comment? All attachments will also be deleted.')) {
+            return;
+        }
+        
+        const commentElement = document.querySelector(`.comment-item-${commentId}`);
+        if (commentElement) {
+            commentElement.style.opacity = '0.5';
+        }
+        
+        fetch(`/{{ getSystemPrefix() }}/ticket-comments/${commentId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success || data.message) {
+                showNotification('Comment deleted successfully', 'success');
+                // Remove comment from DOM
+                if (commentElement) {
+                    commentElement.remove();
+                }
+                // Update count
+                const commentsCount = document.getElementById('comments_count');
+                const currentCount = parseInt(commentsCount.textContent);
+                commentsCount.textContent = Math.max(0, currentCount - 1);
+                
+                // Reload comments to get fresh data
+                const projectId = document.getElementById('edit_project_id').value;
+                setTimeout(() => loadComments(ticketId, projectId), 500);
+            } else {
+                showNotification('Failed to delete comment', 'error');
+                if (commentElement) {
+                    commentElement.style.opacity = '1';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting comment:', error);
+            showNotification('Error deleting comment', 'error');
+            if (commentElement) {
+                commentElement.style.opacity = '1';
+            }
+        });
+    };
 
     // Display activities
     function displayActivities(activities) {

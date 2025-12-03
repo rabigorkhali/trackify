@@ -82,6 +82,7 @@ class TicketController extends ResourceController
                         'assignee_id' => $ticket->assignee_id,
                         'assignee' => $ticket->assignee,
                         'reporter' => $ticket->reporter,
+                        'project' => $ticket->project,
                         'due_date' => $ticket->due_date ? $ticket->due_date->format('Y-m-d') : null,
                         'story_points' => $ticket->story_points,
                         'status' => $ticket->status,
@@ -89,6 +90,7 @@ class TicketController extends ResourceController
                         'updated_at' => $ticket->updated_at->diffForHumans(),
                         'comments' => $ticket->comments()->with('user')->orderBy('created_at', 'desc')->get(),
                         'activities' => $ticket->activities()->with('user')->orderBy('created_at', 'desc')->take(10)->get(),
+                        'attachments' => $ticket->attachments()->orderBy('created_at', 'desc')->get(),
                     ]
                 ]);
             }

@@ -37,10 +37,26 @@
                 <!-- Description -->
                 <div class="card mb-3">
                     <div class="card-body">
-                        <h6 class="card-title"><i class="ti ti-file-text me-2"></i>Description <small class="text-muted">(Click to edit)</small></h6>
-                        <textarea id="ticket-description" class="form-control" rows="4" 
-                                  onblur="updateDescription(this.value)"
-                                  style="min-height: 100px;">{{ $thisData->description ?? 'No description provided.' }}</textarea>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0"><i class="ti ti-file-text me-2"></i>Description</h6>
+                            <button type="button" class="btn btn-sm btn-icon" id="toggle-show-description-edit" title="Edit description">
+                                <i class="ti ti-pencil"></i>
+                            </button>
+                        </div>
+                        <div id="show-view-description" class="p-3 bg-light rounded" style="min-height: 80px;">
+                            {!! nl2br(e($thisData->description ?? 'No description provided.')) !!}
+                        </div>
+                        <div id="show-edit-description-container" style="display: none;">
+                            <div id="show-description-editor" style="min-height: 200px;"></div>
+                            <div class="d-flex gap-2 mt-2">
+                                <button type="button" class="btn btn-sm btn-primary" onclick="saveShowDescription()">
+                                    <i class="ti ti-check me-1"></i>Save
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="cancelShowDescriptionEdit()">
+                                    <i class="ti ti-x me-1"></i>Cancel
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -109,6 +125,89 @@
                         @else
                             <p class="text-muted mb-0">No checklist items yet</p>
                         @endif
+                    </div>
+                </div>
+
+                <!-- Ticket Attachments Section -->
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="card-title mb-0">
+                                <i class="ti ti-paperclip me-2"></i>Attachments
+                                <span class="badge bg-label-secondary">{{ $thisData->attachments->count() }}</span>
+                            </h6>
+                            <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('main-ticket-attachments-input').click()">
+                                <i class="ti ti-upload me-1"></i>Upload Files
+                            </button>
+                        </div>
+                        <input type="file" id="main-ticket-attachments-input" multiple 
+                               accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt,.xlsx,.xls,.zip"
+                               style="display: none;" 
+                               onchange="uploadMainTicketAttachments()">
+                        
+                        <div class="row g-2">
+                            @forelse($thisData->attachments as $attachment)
+                                @php
+                                    $extension = pathinfo($attachment->file_name, PATHINFO_EXTENSION);
+                                    $isImage = in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                                @endphp
+                                <div class="col-md-{{ $isImage ? '4' : '6' }}" id="attachment-{{ $attachment->id }}">
+                                    @if($isImage)
+                                        <div class="position-relative">
+                                            <a href="{{ url('/') }}/{{ $attachment->file_path }}" target="_blank">
+                                                <img src="{{ url('/') }}/{{ $attachment->file_path }}" 
+                                                     alt="{{ $attachment->file_name }}"
+                                                     class="img-thumbnail w-100" 
+                                                     style="height: 150px; object-fit: cover; cursor: pointer;"
+                                                     title="{{ $attachment->file_name }}">
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-danger position-absolute" 
+                                                    style="top: 5px; right: 5px; padding: 4px 8px;"
+                                                    onclick="deleteMainAttachment({{ $attachment->id }})"
+                                                    title="Delete">
+                                                <i class="ti ti-trash" style="font-size: 0.75rem;"></i>
+                                            </button>
+                                            <div class="mt-1">
+                                                <small class="text-muted d-block text-truncate" title="{{ $attachment->file_name }}">
+                                                    {{ $attachment->file_name }}
+                                                </small>
+                                                <small class="text-muted">{{ $attachment->user->name }} • {{ $attachment->created_at->format('M d') }}</small>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div class="card h-100">
+                                            <div class="card-body p-3">
+                                                <div class="d-flex align-items-start gap-2">
+                                                    <i class="ti ti-file text-primary" style="font-size: 2rem;"></i>
+                                                    <div class="flex-grow-1">
+                                                        <a href="{{ url('/') }}/{{ $attachment->file_path }}" 
+                                                           download="{{ $attachment->file_name }}"
+                                                           class="text-decoration-none fw-semibold d-block text-truncate"
+                                                           title="{{ $attachment->file_name }}">
+                                                            {{ Str::limit($attachment->file_name, 25) }}
+                                                        </a>
+                                                        <small class="text-muted d-block">{{ $attachment->user->name }}</small>
+                                                        <small class="text-muted">{{ $attachment->created_at->format('M d, Y') }}</small>
+                                                    </div>
+                                                    <button type="button" class="btn btn-sm btn-icon btn-outline-danger" 
+                                                            onclick="deleteMainAttachment({{ $attachment->id }})"
+                                                            title="Delete">
+                                                        <i class="ti ti-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            @empty
+                                <div class="col-12">
+                                    <div class="text-center py-4 bg-light rounded">
+                                        <i class="ti ti-paperclip-off" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                                        <p class="text-muted mt-2 mb-0">No attachments yet. Click "Upload Files" to add.</p>
+                                    </div>
+                                </div>
+                            @endforelse
+                        </div>
                     </div>
                 </div>
 
@@ -289,26 +388,80 @@
 
                             <!-- Attachments Tab -->
                             <div class="tab-pane fade" id="attachments-tab" role="tabpanel">
-                                @forelse($thisData->attachments as $attachment)
-                                    <div class="d-flex justify-content-between align-items-center p-2 border rounded mb-2">
-                                        <div>
-                                            <i class="ti ti-file me-2"></i>
-                                            <a href="{{ asset('storage/' . $attachment->file_path) }}" target="_blank">
-                                                {{ $attachment->file_name }}
-                                            </a>
-                                            <small class="text-muted d-block">
-                                                Uploaded by {{ $attachment->user->name }} • {{ $attachment->created_at->format('M d, Y') }}
-                                            </small>
+                                <!-- Upload Button -->
+                                <div class="mb-3">
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('show-ticket-attachments-input').click()">
+                                        <i class="ti ti-upload me-1"></i>Upload Files
+                                    </button>
+                                    <input type="file" id="show-ticket-attachments-input" multiple 
+                                           accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt,.xlsx,.xls,.zip"
+                                           style="display: none;" 
+                                           onchange="uploadShowTicketAttachments()">
+                                    <small class="text-muted ms-2">Max 10MB per file. Multiple files allowed.</small>
+                                </div>
+
+                                <div class="row g-2">
+                                    @forelse($thisData->attachments as $attachment)
+                                        @php
+                                            $extension = pathinfo($attachment->file_name, PATHINFO_EXTENSION);
+                                            $isImage = in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                                        @endphp
+                                        <div class="col-md-{{ $isImage ? '4' : '6' }}">
+                                            @if($isImage)
+                                                <div class="position-relative">
+                                                    <a href="{{ url('/') }}/{{ $attachment->file_path }}" target="_blank">
+                                                        <img src="{{ url('/') }}/{{ $attachment->file_path }}" 
+                                                             alt="{{ $attachment->file_name }}"
+                                                             class="img-thumbnail w-100" 
+                                                             style="height: 150px; object-fit: cover; cursor: pointer;"
+                                                             title="{{ $attachment->file_name }}">
+                                                    </a>
+                                                    @if(auth()->id() == $attachment->user_id)
+                                                        <button type="button" class="btn btn-sm btn-danger position-absolute" 
+                                                                style="top: 5px; right: 5px; padding: 2px 6px;"
+                                                                onclick="deleteShowAttachment({{ $attachment->id }})"
+                                                                title="Delete">
+                                                            <i class="ti ti-trash" style="font-size: 0.75rem;"></i>
+                                                        </button>
+                                                    @endif
+                                                    <small class="text-muted d-block mt-1 text-truncate">{{ $attachment->file_name }}</small>
+                                                    <small class="text-muted d-block">{{ $attachment->user->name }} • {{ $attachment->created_at->format('M d') }}</small>
+                                                </div>
+                                            @else
+                                                <div class="card">
+                                                    <div class="card-body p-3">
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <i class="ti ti-file text-primary" style="font-size: 1.5rem;"></i>
+                                                            <div class="flex-grow-1">
+                                                                <a href="{{ url('/') }}/{{ $attachment->file_path }}" 
+                                                                   download="{{ $attachment->file_name }}"
+                                                                   class="text-decoration-none d-block text-truncate"
+                                                                   title="{{ $attachment->file_name }}">
+                                                                    {{ Str::limit($attachment->file_name, 30) }}
+                                                                </a>
+                                                                <small class="text-muted">{{ $attachment->user->name }} • {{ $attachment->created_at->format('M d, Y') }}</small>
+                                                            </div>
+                                                            @if(auth()->id() == $attachment->user_id)
+                                                                <button type="button" class="btn btn-sm btn-icon btn-outline-danger" 
+                                                                        onclick="deleteShowAttachment({{ $attachment->id }})"
+                                                                        title="Delete">
+                                                                    <i class="ti ti-trash"></i>
+                                                                </button>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endif
                                         </div>
-                                        @if(auth()->id() == $attachment->user_id)
-                                            <button type="button" class="btn btn-sm btn-icon">
-                                                <i class="ti ti-trash text-danger"></i>
-                                            </button>
-                                        @endif
-                                    </div>
-                                @empty
-                                    <p class="text-muted text-center">No attachments yet</p>
-                                @endforelse
+                                    @empty
+                                        <div class="col-12">
+                                            <div class="text-center py-5">
+                                                <i class="ti ti-paperclip-off" style="font-size: 3rem; opacity: 0.3;"></i>
+                                                <p class="text-muted mt-2">No attachments yet. Click "Upload Files" to add attachments.</p>
+                                            </div>
+                                        </div>
+                                    @endforelse
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -611,6 +764,10 @@
 @endsection
 
 @section('scripts')
+<!-- Quill Rich Text Editor -->
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+
 <script>
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
 const ticketId = {{ $thisData->id }};
@@ -622,6 +779,9 @@ const mentionDropdown = document.getElementById('mention-dropdown');
 let mentionActive = false;
 let mentionStart = 0;
 let selectedMentionIndex = -1;
+
+// Quill editor instance
+let showDescriptionQuill = null;
 
 commentTextarea?.addEventListener('input', function(e) {
     const cursorPos = this.selectionStart;
@@ -930,6 +1090,70 @@ document.querySelectorAll('.quick-update-field').forEach(function(field) {
     });
 });
 
+// Toggle Description Edit (Show Page)
+document.getElementById('toggle-show-description-edit')?.addEventListener('click', function() {
+    const viewDiv = document.getElementById('show-view-description');
+    const editContainer = document.getElementById('show-edit-description-container');
+    const currentDescription = viewDiv.innerHTML;
+    
+    viewDiv.style.display = 'none';
+    editContainer.style.display = 'block';
+    
+    // Initialize Quill editor if not already initialized
+    if (!showDescriptionQuill) {
+        showDescriptionQuill = new Quill('#show-description-editor', {
+            theme: 'snow',
+            placeholder: 'Enter ticket description...',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline', 'strike'],
+                    ['blockquote', 'code-block'],
+                    [{ 'header': [1, 2, 3, false] }],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    [{ 'color': [] }, { 'background': [] }],
+                    ['link'],
+                    ['clean']
+                ]
+            }
+        });
+    }
+    
+    // Set current content
+    if (currentDescription && currentDescription.trim() !== '' && !currentDescription.includes('No description provided')) {
+        showDescriptionQuill.root.innerHTML = currentDescription;
+    } else {
+        showDescriptionQuill.setText('');
+    }
+    
+    showDescriptionQuill.focus();
+});
+
+// Save Description (Show Page)
+window.saveShowDescription = function() {
+    if (!showDescriptionQuill) return;
+    
+    const newDescription = showDescriptionQuill.root.innerHTML.trim();
+    
+    // Convert HTML to plain text for backend
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = newDescription;
+    const plainText = tempDiv.innerText || tempDiv.textContent || '';
+    
+    quickUpdateField('description', plainText);
+    
+    // Update UI
+    setTimeout(() => {
+        document.getElementById('show-view-description').innerHTML = newDescription || 'No description provided.';
+        cancelShowDescriptionEdit();
+    }, 500);
+};
+
+// Cancel Description Edit (Show Page)
+window.cancelShowDescriptionEdit = function() {
+    document.getElementById('show-view-description').style.display = 'block';
+    document.getElementById('show-edit-description-container').style.display = 'none';
+};
+
 // Update Title
 function updateTitle(newTitle) {
     if (newTitle.trim() === '' || newTitle === '{{ $thisData->title }}') return;
@@ -1086,6 +1310,164 @@ document.getElementById('logTimeForm')?.addEventListener('submit', function(e) {
     })
     .then(() => location.reload());
 });
+
+// Upload Ticket Attachments (Show Page)
+window.uploadShowTicketAttachments = function() {
+    const input = document.getElementById('show-ticket-attachments-input');
+    
+    if (!input.files || input.files.length === 0) {
+        return;
+    }
+    
+    const formData = new FormData();
+    
+    // Add all selected files
+    Array.from(input.files).forEach(file => {
+        formData.append('attachments[]', file);
+    });
+    formData.append('ticket_id', ticketId);
+    
+    showToast('info', `Uploading ${input.files.length} file(s)...`);
+    
+    fetch(`/{{ getSystemPrefix() }}/tickets/${ticketId}/upload-attachments`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json'
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('success', 'Files uploaded successfully!');
+            input.value = '';
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast('error', data.message || 'Failed to upload files');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('error', 'Failed to upload files');
+    });
+};
+
+// Delete Attachment (Show Page - Attachments Tab)
+window.deleteShowAttachment = function(attachmentId) {
+    if (!confirm('Delete this attachment permanently?')) {
+        return;
+    }
+    
+    showToast('info', 'Deleting attachment...');
+    
+    fetch(`/{{ getSystemPrefix() }}/ticket-attachments/${attachmentId}`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('success', 'Attachment deleted successfully!');
+            setTimeout(() => location.reload(), 500);
+        } else {
+            showToast('error', data.message || 'Failed to delete attachment');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('error', 'Failed to delete attachment');
+    });
+};
+
+// Upload Ticket Attachments (Main Section)
+window.uploadMainTicketAttachments = function() {
+    const input = document.getElementById('main-ticket-attachments-input');
+    
+    if (!input.files || input.files.length === 0) {
+        return;
+    }
+    
+    const formData = new FormData();
+    
+    // Add all selected files
+    Array.from(input.files).forEach(file => {
+        formData.append('attachments[]', file);
+    });
+    formData.append('ticket_id', ticketId);
+    
+    showToast('info', `Uploading ${input.files.length} file(s)...`);
+    
+    fetch(`/{{ getSystemPrefix() }}/tickets/${ticketId}/upload-attachments`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json'
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('success', 'Files uploaded successfully!');
+            input.value = '';
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast('error', data.message || 'Failed to upload files');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('error', 'Failed to upload files');
+    });
+};
+
+// Delete Attachment (Main Section)
+window.deleteMainAttachment = function(attachmentId) {
+    if (!confirm('Delete this attachment permanently?')) {
+        return;
+    }
+    
+    const attachmentElement = document.getElementById('attachment-' + attachmentId);
+    if (attachmentElement) {
+        attachmentElement.style.opacity = '0.5';
+    }
+    
+    showToast('info', 'Deleting attachment...');
+    
+    fetch(`/{{ getSystemPrefix() }}/ticket-attachments/${attachmentId}`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('success', 'Attachment deleted successfully!');
+            if (attachmentElement) {
+                attachmentElement.remove();
+            }
+            setTimeout(() => location.reload(), 800);
+        } else {
+            showToast('error', data.message || 'Failed to delete attachment');
+            if (attachmentElement) {
+                attachmentElement.style.opacity = '1';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('error', 'Failed to delete attachment');
+        if (attachmentElement) {
+            attachmentElement.style.opacity = '1';
+        }
+    });
+};
 </script>
 
 <style>
