@@ -975,25 +975,78 @@ function deleteComment(commentId) {
 document.getElementById('addChecklistForm')?.addEventListener('submit', function(e) {
     e.preventDefault();
     const formData = new FormData(this);
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Adding...';
     
     fetch('{{ route("ticket-checklists.store") }}', {
         method: 'POST',
-        headers: {'X-CSRF-TOKEN': csrfToken},
+        headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
         body: formData
     })
-    .then(() => location.reload());
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.message || 'Failed to add checklist item');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showToast('success', 'Checklist item added successfully!');
+            setTimeout(() => location.reload(), 500);
+        } else {
+            throw new Error(data.message || 'Failed to add checklist item');
+        }
+    })
+    .catch(error => {
+        console.error('Error adding checklist:', error);
+        showToast('error', error.message || 'Failed to add checklist item');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
 });
 
 // Toggle Checklist
 document.querySelectorAll('.checklist-checkbox').forEach(checkbox => {
     checkbox.addEventListener('change', function() {
         const checklistId = this.dataset.id;
+        const isChecked = this.checked;
+        
         fetch(`/{{ getSystemPrefix() }}/ticket-checklists/${checklistId}`, {
             method: 'PUT',
-            headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken},
-            body: JSON.stringify({is_completed: this.checked})
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({is_completed: isChecked})
         })
-        .then(() => location.reload());
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to update checklist');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                showToast('success', 'Checklist updated!');
+                setTimeout(() => location.reload(), 500);
+            }
+        })
+        .catch(error => {
+            console.error('Error updating checklist:', error);
+            showToast('error', 'Failed to update checklist');
+            this.checked = !isChecked; // Revert checkbox
+        });
     });
 });
 
@@ -1002,9 +1055,28 @@ function deleteChecklist(checklistId) {
     if (confirm('Delete this checklist item?')) {
         fetch(`/{{ getSystemPrefix() }}/ticket-checklists/${checklistId}`, {
             method: 'DELETE',
-            headers: {'X-CSRF-TOKEN': csrfToken}
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
         })
-        .then(() => location.reload());
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to delete checklist');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                showToast('success', 'Checklist item deleted!');
+                setTimeout(() => location.reload(), 500);
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting checklist:', error);
+            showToast('error', 'Failed to delete checklist item');
+        });
     }
 }
 

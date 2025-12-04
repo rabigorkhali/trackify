@@ -122,6 +122,19 @@ return [
             'url' => '/ticket-comments/*',
             'method' => $deleteMethod,
         ],
+        // Ticket checklist routes - accessible to all authenticated users
+        [
+            'url' => '/ticket-checklists',
+            'method' => $postMethod,
+        ],
+        [
+            'url' => '/ticket-checklists/*',
+            'method' => $putMethod,
+        ],
+        [
+            'url' => '/ticket-checklists/*',
+            'method' => $deleteMethod,
+        ],
     ],
 
     // All the routes are accessible by super user by default
