@@ -264,47 +264,7 @@
                                 class="img-fluid img-thumbnail"></a>
                     @endif
                     <hr>
-                    {{__('Bank Details')}}
-                    <hr>
-                    <div class="col-md-6">
-                        <label class="form-label" for="bank_name">{{ 'Bank Name' }}</label>
-                        <input value="{{ $thisData?->bank_name ?? old('bank_name') }}"
-                               type="text" name="bank_name" id="bank_name"
-                               class="form-control @if ($errors->first('bank_name')) is-invalid @endif"
-                               placeholder="Bank Name"/>
-                        <div class="invalid-feedback">{{ $errors->first('bank_name') }}</div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label" for="bank_account_number">{{ 'Bank Account Number' }}</label>
-                        <input value="{{ $thisData?->bank_account_number ?? old('bank_account_number') }}"
-                               type="text" name="bank_account_number" id="bank_account_number"
-                               class="form-control @if ($errors->first('bank_account_number')) is-invalid @endif"
-                               placeholder="Bank Account Number"/>
-                        <div class="invalid-feedback">{{ $errors->first('bank_account_number') }}</div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label" for="bank_account_name">{{ 'Bank Account Name' }}</label>
-                        <input value="{{ $thisData?->bank_account_name ?? old('bank_account_name') }}"
-                               type="text" name="bank_account_name" id="bank_account_name"
-                               class="form-control @if ($errors->first('bank_account_name')) is-invalid @endif"
-                               placeholder="Bank Account Name"/>
-                        <div class="invalid-feedback">{{ $errors->first('bank_account_name') }}</div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="form-label" for="bank_qr">{{ 'Bank QR Code' }}</label>
-                        <input type="file" name="bank_qr" id="bank_qr"
-                               class="form-control @if ($errors->first('bank_qr')) is-invalid @endif"
-                               accept="image/*"/>
-                        <div class="invalid-feedback">{{ $errors->first('bank_qr') }}</div>
-                        @if($thisData?->bank_qr)
-                            <a target="_blank" href="{{ asset($thisData?->bank_qr) }}"> <img
-                                    src="{{ asset($thisData?->bank_qr) }}" style="width: auto; height:60px;" alt="Favicon"
-                                    class="img-fluid img-thumbnail"></a>
-                        @endif
-                    </div>
+                    
                     <hr>
                 </div>
                 @if(hasPermission('/configs/*','put'))
