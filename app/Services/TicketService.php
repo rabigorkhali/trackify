@@ -218,7 +218,7 @@ class TicketService extends Service
 
     public function store($request)
     {
-        $data = $request->except('_token');
+        $data = $request->except('_token', 'labels', 'attachments', 'checklist_items');
         $data['reporter_id'] = auth()->id();
 
         // Generate ticket key
@@ -230,6 +230,68 @@ class TicketService extends Service
         $data['ticket_key'] = $project->key.'-'.$ticketNumber;
 
         $ticket = $this->model->create($data);
+
+        // Attach labels if provided
+        if ($request->has('labels') && is_array($request->labels)) {
+            $ticket->labels()->sync($request->labels);
+        }
+
+        // Handle file attachments
+        if ($request->hasFile('attachments')) {
+            // Ensure the directory exists
+            $uploadPath = public_path('uploads/tickets');
+            if (!file_exists($uploadPath)) {
+                mkdir($uploadPath, 0755, true);
+            }
+
+            foreach ($request->file('attachments') as $file) {
+                try {
+                    $originalName = $file->getClientOriginalName();
+                    $extension = $file->getClientOriginalExtension();
+                    $fileName = \Illuminate\Support\Str::slug(pathinfo($originalName, PATHINFO_FILENAME)).'_'.time().'_'.rand(1000, 9999).'.'.$extension;
+
+                    // Get file properties BEFORE moving
+                    $fileSize = $file->getSize();
+                    $mimeType = $file->getMimeType();
+
+                    // Store in public/uploads/tickets directory
+                    $file->move($uploadPath, $fileName);
+                    $relativePath = 'uploads/tickets/'.$fileName;
+
+                    // Create attachment record
+                    \App\Models\TicketAttachment::create([
+                        'ticket_id' => $ticket->id,
+                        'user_id' => auth()->id(),
+                        'file_name' => $originalName,
+                        'file_path' => $relativePath,
+                        'file_type' => $mimeType,
+                        'file_size' => $fileSize,
+                    ]);
+
+                    \Log::info('Ticket attachment uploaded during creation', [
+                        'ticket_id' => $ticket->id,
+                        'file_name' => $originalName,
+                        'file_path' => $relativePath,
+                    ]);
+                } catch (\Exception $e) {
+                    \Log::error('Failed to upload attachment during ticket creation: '.$e->getMessage());
+                }
+            }
+        }
+
+        // Handle checklist items
+        if ($request->has('checklist_items') && is_array($request->checklist_items)) {
+            foreach ($request->checklist_items as $index => $item) {
+                if (!empty(trim($item))) {
+                    \App\Models\TicketChecklist::create([
+                        'ticket_id' => $ticket->id,
+                        'title' => trim($item),
+                        'order' => $index + 1,
+                        'is_completed' => false,
+                    ]);
+                }
+            }
+        }
 
         // Log activity
         \App\Models\TicketActivity::create([

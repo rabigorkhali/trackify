@@ -50,15 +50,25 @@ class TicketController extends ResourceController
     /**
      * Show ticket details.
      */
-    public function show($ticket)
+    public function show($project, $ticket)
     {
         $request = $this->defaultRequest();
         $request = app()->make($request);
-        // For nested routes, get project from route parameter
-        $projectId = request()->route('project') ?? $this->moduleId;
+        // For nested routes, get project from route parameter  
+        $projectId = $project;
+        $ticketId = $ticket;
         $this->setModuleId($projectId);
+
+        // Debug logging
+        \Log::info('TicketController show() called', [
+            'ticket_param' => $ticketId,
+            'project_param' => $projectId,
+            'route_params' => request()->route()->parameters(),
+            'url' => request()->fullUrl(),
+        ]);
+
         try {
-            $data = $this->service->showPageData($request, $ticket);
+            $data = $this->service->showPageData($request, $ticketId);
             $data['project'] = \App\Models\Project::findOrFail($projectId);
             $data['breadcrumbs'] = $this->breadcrumbForIndex(false);
             $data['breadcrumbs'][] = [
