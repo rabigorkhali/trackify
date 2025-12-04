@@ -1400,12 +1400,11 @@ $priorityColors = [
                                                     <span>${fileName.length > 15 ? fileName.substring(0, 15) + '...' : fileName}</span>
                                                 </a>
                                             `;
-                    }
-                }).join('')
-        } <
-        /div> < /
-        div >
-        ` : ''}
+                                                }
+                                            }).join('')}
+                                        </div>
+                                    </div>
+                                ` : ''}
                     </div>
                 </div>
             `;

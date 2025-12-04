@@ -54,7 +54,7 @@ class ProjectService extends Service
     public function editPageData($request, $id)
     {
         return [
-            'thisData' => $this->itemByIdentifier($id),
+            'thisData' => $this->itemByIdentifier($id)->load('members'),
             'users' => User::orderBy('name', 'asc')->get(),
         ];
     }
@@ -108,16 +108,18 @@ class ProjectService extends Service
         // Update project members
         $members = [];
 
-        // Keep the owner
+        // Keep the owner - try to find from pivot, fallback to created_by
         $owner = $update->members()->wherePivot('role', 'owner')->first();
-        if ($owner) {
-            $members[$owner->id] = ['role' => 'owner'];
-        }
+        $ownerId = $owner ? $owner->id : ($update->created_by ?? auth()->id());
+        
+        // Always ensure owner is in members
+        $members[$ownerId] = ['role' => 'owner'];
 
         // Add selected members as regular members
         if ($request->has('members') && is_array($request->members)) {
             foreach ($request->members as $userId) {
-                if ($owner && $userId != $owner->id) { // Don't duplicate the owner
+                // Don't duplicate the owner - add all other selected users as members
+                if ($userId != $ownerId) {
                     $members[$userId] = ['role' => 'member'];
                 }
             }
