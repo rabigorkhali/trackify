@@ -22,15 +22,15 @@ class ProjectRequest extends FormRequest
     public function rules(): array
     {
         $projectId = $this->route('project') ?? $this->id ?? null;
+
         return [
             'name' => 'required|string|max:255',
-            'key' => 'required|string|max:10|unique:projects,key,' . $projectId,
+            'key' => 'required|string|max:10|unique:projects,key,'.$projectId,
             'description' => 'nullable|string',
             'avatar' => 'nullable|image|max:2048',
             'status' => 'required|integer|in:0,1',
             'members' => 'nullable|array',
-            'members.*' => 'nullable|string|in:admin,member,viewer',
+            'members.*' => 'integer|exists:users,id',
         ];
     }
 }
-

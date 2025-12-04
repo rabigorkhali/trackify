@@ -51,20 +51,15 @@
                                 <thead>
                                     <tr>
                                         <th>User</th>
-                                        <th>Role</th>
+                                        <th class="text-center" style="width: 100px;">Member</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($users as $user)
                                         <tr>
                                             <td>{{ $user->name }} ({{ $user->email }})</td>
-                                            <td>
-                                                <select name="members[{{ $user->id }}]" class="form-select">
-                                                    <option value="">Not a member</option>
-                                                    <option value="admin">Admin</option>
-                                                    <option value="member">Member</option>
-                                                    <option value="viewer">Viewer</option>
-                                                </select>
+                                            <td class="text-center">
+                                                <input type="checkbox" name="members[]" value="{{ $user->id }}" class="form-check-input" style="width: 20px; height: 20px;">
                                             </td>
                                         </tr>
                                     @endforeach

@@ -63,24 +63,18 @@
                                 <thead>
                                     <tr>
                                         <th>User</th>
-                                        <th>Role</th>
+                                        <th class="text-center" style="width: 100px;">Member</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($users as $user)
                                         @php
-                                            $member = $thisData->members->where('id', $user->id)->first();
-                                            $role = $member ? $member->pivot->role : '';
+                                            $isMember = $thisData->members->where('id', $user->id)->first() !== null;
                                         @endphp
                                         <tr>
                                             <td>{{ $user->name }} ({{ $user->email }})</td>
-                                            <td>
-                                                <select name="members[{{ $user->id }}]" class="form-select">
-                                                    <option value="">Not a member</option>
-                                                    <option value="admin" @if($role == 'admin') selected @endif>Admin</option>
-                                                    <option value="member" @if($role == 'member') selected @endif>Member</option>
-                                                    <option value="viewer" @if($role == 'viewer') selected @endif>Viewer</option>
-                                                </select>
+                                            <td class="text-center">
+                                                <input type="checkbox" name="members[]" value="{{ $user->id }}" class="form-check-input" style="width: 20px; height: 20px;" @if($isMember) checked @endif>
                                             </td>
                                         </tr>
                                     @endforeach

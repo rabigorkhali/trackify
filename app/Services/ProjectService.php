@@ -31,10 +31,10 @@ class ProjectService extends Service
         $table = $this->model->getTable();
         if ($keyword) {
             if (Schema::hasColumn($table, 'name')) {
-                $query->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($keyword) . '%']);
+                $query->whereRaw('LOWER(name) LIKE ?', ['%'.strtolower($keyword).'%']);
             }
             if (Schema::hasColumn($table, 'key')) {
-                $query->orWhereRaw('LOWER(key) LIKE ?', ['%' . strtolower($keyword) . '%']);
+                $query->orWhereRaw('LOWER(key) LIKE ?', ['%'.strtolower($keyword).'%']);
             }
         }
         if ($pagination) {
@@ -63,24 +63,29 @@ class ProjectService extends Service
     {
         $data = $request->except('_token', 'members');
         $data['created_by'] = auth()->id();
-        
+
         if ($request->file('avatar')) {
-            $data['avatar'] = $this->fullImageUploadPath . uploadImage($this->fullImageUploadPath, 'avatar', true, 200, null);
+            $data['avatar'] = $this->fullImageUploadPath.uploadImage($this->fullImageUploadPath, 'avatar', true, 200, null);
         }
 
         $project = $this->model->create($data);
-        
+
         // Add project members
-        if ($request->has('members')) {
-            $members = [];
-            foreach ($request->members as $userId => $role) {
-                $members[$userId] = ['role' => $role];
-            }
-            $project->members()->sync($members);
-        }
-        
+        $members = [];
+
         // Add creator as owner
-        $project->members()->attach(auth()->id(), ['role' => 'owner']);
+        $members[auth()->id()] = ['role' => 'owner'];
+
+        // Add selected members as regular members
+        if ($request->has('members') && is_array($request->members)) {
+            foreach ($request->members as $userId) {
+                if ($userId != auth()->id()) { // Don't duplicate the owner
+                    $members[$userId] = ['role' => 'member'];
+                }
+            }
+        }
+
+        $project->members()->sync($members);
 
         return $project;
     }
@@ -90,31 +95,36 @@ class ProjectService extends Service
         $data = $request->except('_token', 'members');
         $update = $this->itemByIdentifier($id);
         $avatarPath = $update->avatar ?? null;
-        
+
         if ($request->hasFile('avatar')) {
             if ($avatarPath && file_exists(public_path($avatarPath))) {
                 removeImage($avatarPath);
             }
-            $data['avatar'] = $this->fullImageUploadPath . uploadImage($this->fullImageUploadPath, 'avatar', true, 200, null);
+            $data['avatar'] = $this->fullImageUploadPath.uploadImage($this->fullImageUploadPath, 'avatar', true, 200, null);
         }
-        
+
         $update->fill($data)->save();
-        
+
         // Update project members
-        if ($request->has('members')) {
-            $members = [];
-            foreach ($request->members as $userId => $role) {
-                $members[$userId] = ['role' => $role];
-            }
-            // Keep the owner
-            $owner = $update->members()->wherePivot('role', 'owner')->first();
-            if ($owner) {
-                $members[$owner->id] = ['role' => 'owner'];
-            }
-            $update->members()->sync($members);
+        $members = [];
+
+        // Keep the owner
+        $owner = $update->members()->wherePivot('role', 'owner')->first();
+        if ($owner) {
+            $members[$owner->id] = ['role' => 'owner'];
         }
+
+        // Add selected members as regular members
+        if ($request->has('members') && is_array($request->members)) {
+            foreach ($request->members as $userId) {
+                if ($owner && $userId != $owner->id) { // Don't duplicate the owner
+                    $members[$userId] = ['role' => 'member'];
+                }
+            }
+        }
+
+        $update->members()->sync($members);
 
         return $update;
     }
 }
-
