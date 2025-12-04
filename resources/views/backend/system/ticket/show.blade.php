@@ -1468,6 +1468,37 @@ window.deleteMainAttachment = function(attachmentId) {
         }
     });
 };
+
+// Format mentions in comments to be clickable
+function formatMentionsInComments() {
+    const commentTexts = document.querySelectorAll('.comment-text');
+    const users = @json($users ?? []); // Get users list
+    
+    commentTexts.forEach(commentElement => {
+        let text = commentElement.textContent;
+        if (!text) return;
+        
+        let html = text;
+        
+        // Sort users by name length (longest first) to avoid partial replacements
+        const sortedUsers = users.sort((a, b) => b.name.length - a.name.length);
+        
+        sortedUsers.forEach(user => {
+            const mentionPattern = new RegExp('@' + user.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+            const link = '<a href="/{{ getSystemPrefix() }}/users/' + user.id + '" target="_blank" class="badge bg-label-primary text-decoration-none" title="' + user.email + '">@' + user.name + '</a>';
+            html = html.replace(mentionPattern, link);
+        });
+        
+        if (html !== text) {
+            commentElement.innerHTML = html;
+        }
+    });
+}
+
+// Run on page load
+document.addEventListener('DOMContentLoaded', function() {
+    formatMentionsInComments();
+});
 </script>
 
 <style>

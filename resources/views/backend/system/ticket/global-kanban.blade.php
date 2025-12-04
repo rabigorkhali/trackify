@@ -1813,7 +1813,15 @@ $priorityColors = [
                     },
                     body: formData
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            console.error('Server error:', text);
+                            throw new Error('Server returned an error');
+                        });
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<i class="ti ti-send me-1"></i>Add Comment';
@@ -1832,7 +1840,7 @@ $priorityColors = [
                     console.error('Error:', error);
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<i class="ti ti-send me-1"></i>Add Comment';
-                    showNotification('Failed to add comment', 'error');
+                    showNotification('Failed to add comment. Please check the console for details.', 'error');
                 });
         });
 
