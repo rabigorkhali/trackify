@@ -233,9 +233,13 @@
                                                 <button class="btn btn-sm p-0 d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="border: none; background: transparent;" onclick="event.stopPropagation();">
                                                     @if($ticket->assignee)
                                                         <div class="avatar avatar-xs">
-                                                            <span class="avatar-initial rounded-circle" style="background-color: {{ sprintf('#%06X', mt_rand(0, 0xFFFFFF)) }}; font-size: 0.7rem;">
-                                                                {{ strtoupper(substr($ticket->assignee->name, 0, 2)) }}
-                                                            </span>
+                                                            @if($ticket->assignee->image)
+                                                                <img src="{{ asset($ticket->assignee->image) }}" alt="{{ $ticket->assignee->name }}" class="rounded-circle" style="width: 100%; height: 100%; object-fit: contain; object-position: center;">
+                                                            @else
+                                                                <span class="avatar-initial rounded-circle" style="background-color: {{ sprintf('#%06X', mt_rand(0, 0xFFFFFF)) }}; font-size: 0.65rem;">
+                                                                    {{ strtoupper(substr($ticket->assignee->name, 0, 3)) }}
+                                                                </span>
+                                                            @endif
                                                         </div>
                                                     @else
                                                         <i class="ti ti-user-plus" style="font-size: 1.2rem; color: #697a8d;"></i>
@@ -249,7 +253,18 @@
                                                     <li><hr class="dropdown-divider"></li>
                                                     @foreach($users as $user)
                                                         <li><a class="dropdown-item quick-assign {{ $ticket->assignee_id == $user->id ? 'active' : '' }}" href="javascript:void(0);" data-ticket-id="{{ $ticket->id }}" data-project-id="{{ $ticket->project_id }}" data-assignee-id="{{ $user->id }}">
-                                                            <i class="ti ti-user me-2"></i>{{ $user->name }}
+                                                            <div class="d-flex align-items-center">
+                                                                <div class="avatar avatar-xs me-2">
+                                                                    @if($user->image)
+                                                                        <img src="{{ asset($user->image) }}" alt="{{ $user->name }}" class="rounded-circle" style="width: 100%; height: 100%; object-fit: contain; object-position: center;">
+                                                                    @else
+                                                                        <span class="avatar-initial rounded-circle" style="background-color: {{ sprintf('#%06X', mt_rand(0, 0xFFFFFF)) }}; font-size: 0.65rem;">
+                                                                            {{ strtoupper(substr($user->name, 0, 3)) }}
+                                                                        </span>
+                                                                    @endif
+                                                                </div>
+                                                                <span>{{ $user->name }}</span>
+                                                            </div>
                                                         </a></li>
                                                     @endforeach
                                                 </ul>
@@ -604,15 +619,23 @@
 <!-- Quill Rich Text Editor -->
 <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+@php
+    $userListData = $users->map(function($user) {
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'image' => $user->image
+        ];
+    })->values();
+@endphp
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const kanbanLists = document.querySelectorAll('.kanban-list');
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
     
     // Users list for mentions
-    const usersList = @json($users->map(function($user) {
-        return ['id' => $user->id, 'name' => $user->name, 'email' => $user->email];
-    }));
+    const usersList = @json($userListData);
     
     // Initialize Tribute.js for @mentions
     let tribute = null;
@@ -1504,13 +1527,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 const avatarContainer = ticketCard.querySelector('.dropdown button');
                 if (avatarContainer) {
                     const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16);
-                    avatarContainer.innerHTML = `
-                        <div class="avatar avatar-xs">
-                            <span class="avatar-initial rounded-circle" style="background-color: ${randomColor}; font-size: 0.7rem;">
-                                ${user.name.substring(0, 2).toUpperCase()}
-                            </span>
-                        </div>
-                    `;
+                    if (user.image) {
+                        const imageUrl = user.image.startsWith('http') ? user.image : `{{ url('') }}/${user.image}`;
+                        avatarContainer.innerHTML = `
+                            <div class="avatar avatar-xs">
+                                <img src="${imageUrl}" alt="${user.name}" class="rounded-circle" style="width: 100%; height: 100%; object-fit: contain; object-position: center;">
+                            </div>
+                        `;
+                    } else {
+                        avatarContainer.innerHTML = `
+                            <div class="avatar avatar-xs">
+                                <span class="avatar-initial rounded-circle" style="background-color: ${randomColor}; font-size: 0.65rem;">
+                                    ${user.name.substring(0, 3).toUpperCase()}
+                                </span>
+                            </div>
+                        `;
+                    }
                 }
             }
         }

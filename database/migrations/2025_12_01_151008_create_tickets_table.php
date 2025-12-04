@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -26,10 +25,10 @@ return new class extends Migration
             $table->integer('story_points')->nullable();
             $table->integer('status')->default(1);
             $table->timestamps();
-            $table->foreign('project_id')->references('id')->on('projects')->onDelete('cascade');
-            $table->foreign('ticket_status_id')->references('id')->on('ticket_statuses')->onDelete('restrict');
+            $table->foreign('project_id')->references('id')->on('projects');
+            $table->foreign('ticket_status_id')->references('id')->on('ticket_statuses');
             $table->foreign('assignee_id')->references('id')->on('users')->onDelete('set null');
-            $table->foreign('reporter_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('reporter_id')->references('id')->on('users')->onDelete('set null');
         });
     }
 

@@ -104,6 +104,15 @@ return [
             'url' => '/ticket-attachments/*',
             'method' => $deleteMethod,
         ],
+        // Ticket update routes - accessible to all authenticated users
+        [
+            'url' => '/tickets-update-assignee',
+            'method' => $postMethod,
+        ],
+        [
+            'url' => '/tickets-update-status',
+            'method' => $postMethod,
+        ],
     ],
 
     // All the routes are accessible by super user by default
