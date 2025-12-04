@@ -7,7 +7,7 @@
             <h5 class="card-header d-flex justify-content-between align-items-center">
                 <span>{{ $title }}</span>
                 <div>
-                    <a href="{{ route('tickets.kanban', $project->id) }}" class="btn btn-label-primary btn-sm">
+                    <a href="{{ route('kanban.index', ['project_id' => $project->id]) }}" class="btn btn-label-primary btn-sm">
                         <i class="ti ti-layout-kanban me-1"></i>Kanban View
                     </a>
                     @if(hasPermission('/'.str_replace(' ','-',strtolower($title)),'post'))

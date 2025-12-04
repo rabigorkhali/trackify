@@ -10,7 +10,7 @@
                 <div class="row align-items-center">
                     <div class="col-md-8">
                         <div class="d-flex align-items-center gap-2 flex-wrap">
-                            <a href="{{ route('tickets.kanban', $project->id) }}" class="btn btn-sm btn-icon btn-label-secondary">
+                            <a href="{{ route('kanban.index') }}" class="btn btn-sm btn-icon btn-label-secondary">
                                 <i class="ti ti-arrow-left"></i>
                             </a>
                             <span class="badge bg-primary" style="font-size: 0.9rem; padding: 6px 12px;">{{ $thisData->ticket_key }}</span>
@@ -23,7 +23,7 @@
                         <a href="{{ route('tickets.edit', [$project->id, $thisData->id]) }}" class="btn btn-sm btn-primary">
                             <i class="ti ti-pencil me-1"></i>Edit
                         </a>
-                        <a href="{{ route('tickets.kanban', $project->id) }}" class="btn btn-sm btn-label-secondary">
+                        <a href="{{ route('kanban.index') }}" class="btn btn-sm btn-label-secondary">
                             <i class="ti ti-layout-board me-1"></i>Kanban
                         </a>
                     </div>

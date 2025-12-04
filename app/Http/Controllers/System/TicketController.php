@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\System;
 
 use App\Http\Controllers\ResourceController;
-use App\Services\TicketService;
 use App\Services\NotificationService;
+use App\Services\TicketService;
 use Illuminate\Http\Request;
 
 class TicketController extends ResourceController
@@ -48,7 +48,7 @@ class TicketController extends ResourceController
     }
 
     /**
-     * Show ticket details
+     * Show ticket details.
      */
     public function show($ticket)
     {
@@ -65,10 +65,11 @@ class TicketController extends ResourceController
                 'title' => 'View',
                 'active' => true,
             ];
-            
+
             // Return JSON if AJAX request (for modal)
             if (request()->wantsJson() || request()->ajax()) {
                 $ticket = $data['thisData'];
+
                 return response()->json([
                     'success' => true,
                     'ticket' => [
@@ -91,55 +92,35 @@ class TicketController extends ResourceController
                         'comments' => $ticket->comments()->with('user')->orderBy('created_at', 'desc')->get(),
                         'activities' => $ticket->activities()->with('user')->orderBy('created_at', 'desc')->take(10)->get(),
                         'attachments' => $ticket->attachments()->orderBy('created_at', 'desc')->get(),
-                    ]
+                    ],
                 ]);
             }
-            
+
             return $this->renderView('show', $data);
         } catch (\Throwable $th) {
             if (request()->wantsJson() || request()->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => $th->getMessage() ?? 'Something went wrong.'
+                    'message' => $th->getMessage() ?? 'Something went wrong.',
                 ], 500);
             }
+
             return redirect()->back()->withErrors(['error' => $th->getMessage() ?? 'Something went wrong.']);
         }
     }
 
     /**
-     * Show Global Kanban board view (all projects)
+     * Show Global Kanban board view (all projects).
      */
     public function globalKanban(Request $request)
     {
         try {
             $data = $this->thisService->globalKanbanPageData($request);
             $data['breadcrumbs'] = [
-                ['title' => 'Global Kanban Board', 'active' => true]
+                ['title' => 'Global Kanban Board', 'active' => true],
             ];
-            return view('backend.system.ticket.global-kanban', $data);
-        } catch (\Throwable $th) {
-            return redirect()->back()->withErrors(['error' => $th->getMessage() ?? 'Something went wrong.']);
-        }
-    }
 
-    /**
-     * Show Kanban board view
-     */
-    public function kanban(Request $request)
-    {
-        // For nested routes, get project from route parameter
-        $projectId = request()->route('project') ?? $this->moduleId;
-        $this->setModuleId($projectId);
-        try {
-            $data = $this->service->kanbanPageData($request, $projectId);
-            $data['project'] = \App\Models\Project::findOrFail($projectId);
-            $data['breadcrumbs'] = $this->breadcrumbForIndex(false);
-            $data['breadcrumbs'][] = [
-                'title' => 'Kanban Board',
-                'active' => true,
-            ];
-            return $this->renderView('kanban', $data);
+            return view('backend.system.ticket.global-kanban', $data);
         } catch (\Throwable $th) {
             return redirect()->back()->withErrors(['error' => $th->getMessage() ?? 'Something went wrong.']);
         }
@@ -157,6 +138,7 @@ class TicketController extends ResourceController
         $request->merge(['project_id' => $projectId]);
         $data = $this->service->indexPageData($request);
         $data['breadcrumbs'] = $this->breadcrumbForIndex();
+
         return $this->renderView('index', $data);
     }
 
@@ -196,6 +178,7 @@ class TicketController extends ResourceController
         $request->merge(['project_id' => $projectId]);
         try {
             $this->service->store($request);
+
             return redirect($this->getUrl())->withErrors(['success' => 'Successfully created.']);
         } catch (\Throwable $th) {
             return redirect()->back()->withErrors(['error' => $th->getMessage() ?? 'Something went wrong.']);
@@ -216,6 +199,7 @@ class TicketController extends ResourceController
         try {
             $data = $this->service->editPageData($request, $id);
             $data['breadcrumbs'] = $this->breadcrumbForForm('Edit');
+
             return $this->renderView('edit', $data);
         } catch (\Throwable $th) {
             return redirect()->back()->withErrors(['error' => $th->getMessage() ?? 'Something went wrong.']);
@@ -242,6 +226,7 @@ class TicketController extends ResourceController
         $request->merge(['project_id' => $projectId]);
         try {
             $this->service->update($request, $id);
+
             return redirect($this->getUrl())->withErrors(['success' => 'Successfully updated.']);
         } catch (\Throwable $th) {
             return redirect()->back()->withErrors(['error' => $th->getMessage() ?? 'Something went wrong.']);
@@ -262,6 +247,7 @@ class TicketController extends ResourceController
             if (isset($response['error'])) {
                 return redirect()->back()->withErrors(['error' => $response['error']]);
             }
+
             return redirect($this->getUrl())->withErrors(['success' => 'Successfully deleted.']);
         } catch (\Throwable $th) {
             return redirect()->back()->withErrors(['error' => $th->getMessage() ?? 'Something went wrong.']);
@@ -269,7 +255,7 @@ class TicketController extends ResourceController
     }
 
     /**
-     * Update ticket status (AJAX)
+     * Update ticket status (AJAX).
      */
     public function updateStatus(Request $request)
     {
@@ -289,7 +275,7 @@ class TicketController extends ResourceController
                 'ticket_id' => $ticket->id,
                 'user_id' => auth()->id(),
                 'action' => 'status_changed',
-                'description' => 'Changed status from "' . $oldStatus->name . '" to "' . $ticket->ticketStatus->name . '"',
+                'description' => 'Changed status from "'.$oldStatus->name.'" to "'.$ticket->ticketStatus->name.'"',
                 'old_value' => ['status_id' => $oldStatus->id, 'status_name' => $oldStatus->name],
                 'new_value' => ['status_id' => $ticket->ticket_status_id, 'status_name' => $ticket->ticketStatus->name],
             ]);
@@ -299,18 +285,18 @@ class TicketController extends ResourceController
 
             return response()->json([
                 'success' => true,
-                'message' => 'Ticket status updated successfully'
+                'message' => 'Ticket status updated successfully',
             ]);
         } catch (\Throwable $th) {
             return response()->json([
                 'success' => false,
-                'message' => $th->getMessage() ?? 'Failed to update ticket status'
+                'message' => $th->getMessage() ?? 'Failed to update ticket status',
             ], 400);
         }
     }
 
     /**
-     * Update ticket assignee (AJAX)
+     * Update ticket assignee (AJAX).
      */
     public function updateAssignee(Request $request)
     {
@@ -329,12 +315,12 @@ class TicketController extends ResourceController
             $newAssignee = $request->assignee_id ? \App\Models\User::find($request->assignee_id) : null;
             $oldAssigneeName = $oldAssignee ? $oldAssignee->name : 'Unassigned';
             $newAssigneeName = $newAssignee ? $newAssignee->name : 'Unassigned';
-            
+
             \App\Models\TicketActivity::create([
                 'ticket_id' => $ticket->id,
                 'user_id' => auth()->id(),
                 'action' => 'assignee_changed',
-                'description' => 'Changed assignee from "' . $oldAssigneeName . '" to "' . $newAssigneeName . '"',
+                'description' => 'Changed assignee from "'.$oldAssigneeName.'" to "'.$newAssigneeName.'"',
                 'old_value' => ['assignee_id' => $oldAssignee?->id, 'assignee_name' => $oldAssigneeName],
                 'new_value' => ['assignee_id' => $ticket->assignee_id, 'assignee_name' => $newAssigneeName],
             ]);
@@ -344,18 +330,18 @@ class TicketController extends ResourceController
 
             return response()->json([
                 'success' => true,
-                'message' => 'Assignee updated successfully'
+                'message' => 'Assignee updated successfully',
             ]);
         } catch (\Throwable $th) {
             return response()->json([
                 'success' => false,
-                'message' => $th->getMessage() ?? 'Failed to update assignee'
+                'message' => $th->getMessage() ?? 'Failed to update assignee',
             ], 400);
         }
     }
 
     /**
-     * Attach a label to a ticket
+     * Attach a label to a ticket.
      */
     public function attachLabel(Request $request, $ticket)
     {
@@ -373,24 +359,24 @@ class TicketController extends ResourceController
                 'ticket_id' => $ticket->id,
                 'user_id' => auth()->id(),
                 'action' => 'label_added',
-                'description' => 'Added label "' . $label->name . '"',
+                'description' => 'Added label "'.$label->name.'"',
             ]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Label attached successfully',
-                'label' => $label
+                'label' => $label,
             ]);
         } catch (\Throwable $th) {
             return response()->json([
                 'success' => false,
-                'message' => $th->getMessage()
+                'message' => $th->getMessage(),
             ], 400);
         }
     }
 
     /**
-     * Detach a label from a ticket
+     * Detach a label from a ticket.
      */
     public function detachLabel($ticket, $label)
     {
@@ -404,19 +390,18 @@ class TicketController extends ResourceController
                 'ticket_id' => $ticket->id,
                 'user_id' => auth()->id(),
                 'action' => 'label_removed',
-                'description' => 'Removed label "' . $labelModel->name . '"',
+                'description' => 'Removed label "'.$labelModel->name.'"',
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Label detached successfully'
+                'message' => 'Label detached successfully',
             ]);
         } catch (\Throwable $th) {
             return response()->json([
                 'success' => false,
-                'message' => $th->getMessage()
+                'message' => $th->getMessage(),
             ], 400);
         }
     }
 }
-

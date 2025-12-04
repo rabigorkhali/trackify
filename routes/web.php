@@ -103,7 +103,6 @@ Route::prefix(getSystemPrefix())->middleware(['auth', 'permission.routes', 'log'
     
     // Nested Tickets under Projects
     Route::prefix('projects/{project}')->group(function () {
-        Route::get('/tickets-kanban', [TicketController::class, 'kanban'])->name('tickets.kanban');
         Route::get('/tickets/{ticket}/show', [TicketController::class, 'show'])->name('tickets.show');
         Route::resource('/tickets', TicketController::class);
     });

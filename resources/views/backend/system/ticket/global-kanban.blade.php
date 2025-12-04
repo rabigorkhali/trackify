@@ -499,7 +499,7 @@
                 </div>
                 <form id="createTicketForm" method="post" enctype="multipart/form-data">
                     @csrf
-                    <div class="modal-body">
+                    <div class="modal-body" style="max-height: calc(100vh - 250px); overflow-y: auto;">
                         <div class="row g-3">
                             <!-- Project -->
                             <div class="col-md-12">
