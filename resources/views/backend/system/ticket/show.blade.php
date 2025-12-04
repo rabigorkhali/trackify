@@ -38,9 +38,7 @@
                         </div>
                     </div>
                     <div class="col-md-4 text-end mt-2 mt-md-0">
-                        <a href="{{ route('tickets.edit', [$project->id, $thisData->id]) }}" class="btn btn-sm btn-primary">
-                            <i class="ti ti-pencil me-1"></i>Edit
-                        </a>
+                        
                         <a href="{{ route('kanban.index') }}" class="btn btn-sm btn-label-secondary">
                             <i class="ti ti-layout-board me-1"></i>Kanban
                         </a>
