@@ -1300,26 +1300,33 @@ $priorityColors = [
                 const replacedPositions = new Set();
 
                 sortedUsers.forEach(user => {
-                    const mentionText = '@' + user.name;
-                    let startIndex = 0;
+                    // Try both formats: with spaces and without spaces
+                    const mentionFormats = [
+                        '@' + user.name,
+                        '@' + user.name.replace(/\s+/g, '')
+                    ];
 
-                    while ((startIndex = result.indexOf(mentionText, startIndex)) !== -1) {
-                        if (!replacedPositions.has(startIndex)) {
-                            const before = result.substring(0, startIndex);
-                            const after = result.substring(startIndex + mentionText.length);
+                    mentionFormats.forEach(mentionText => {
+                        let startIndex = 0;
 
-                            const link = '<a href="/{{ getSystemPrefix() }}/users/' + user.id +
-                                '" target="_blank" class="badge bg-label-primary text-decoration-none"' +
-                                ' title="' + user.email + '" onclick="event.stopPropagation();">' +
-                                mentionText + '</a>';
+                        while ((startIndex = result.indexOf(mentionText, startIndex)) !== -1) {
+                            if (!replacedPositions.has(startIndex)) {
+                                const before = result.substring(0, startIndex);
+                                const after = result.substring(startIndex + mentionText.length);
 
-                            result = before + link + after;
-                            replacedPositions.add(startIndex);
-                            startIndex += link.length;
-                        } else {
-                            startIndex += mentionText.length;
+                                const link = '<a href="/{{ getSystemPrefix() }}/users/' + user.id +
+                                    '" target="_blank" class="badge bg-label-primary text-decoration-none"' +
+                                    ' title="' + user.email + '" onclick="event.stopPropagation();">' +
+                                    mentionText + '</a>';
+
+                                result = before + link + after;
+                                replacedPositions.add(startIndex);
+                                startIndex += link.length;
+                            } else {
+                                startIndex += mentionText.length;
+                            }
                         }
-                    }
+                    });
                 });
 
                 return result;

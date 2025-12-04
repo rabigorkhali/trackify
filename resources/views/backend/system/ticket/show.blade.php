@@ -1478,19 +1478,42 @@ function formatMentionsInComments() {
         let text = commentElement.textContent;
         if (!text) return;
         
-        let html = text;
-        
-        // Sort users by name length (longest first) to avoid partial replacements
-        const sortedUsers = users.sort((a, b) => b.name.length - a.name.length);
+        let result = text;
+        const sortedUsers = [...users].sort((a, b) => b.name.length - a.name.length);
+        const replacedPositions = new Set();
         
         sortedUsers.forEach(user => {
-            const mentionPattern = new RegExp('@' + user.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
-            const link = '<a href="/{{ getSystemPrefix() }}/users/' + user.id + '" target="_blank" class="badge bg-label-primary text-decoration-none" title="' + user.email + '">@' + user.name + '</a>';
-            html = html.replace(mentionPattern, link);
+            // Try both formats: with spaces and without spaces
+            const mentionFormats = [
+                '@' + user.name,
+                '@' + user.name.replace(/\s+/g, '')
+            ];
+            
+            mentionFormats.forEach(mentionText => {
+                let startIndex = 0;
+                
+                while ((startIndex = result.indexOf(mentionText, startIndex)) !== -1) {
+                    if (!replacedPositions.has(startIndex)) {
+                        const before = result.substring(0, startIndex);
+                        const after = result.substring(startIndex + mentionText.length);
+                        
+                        const link = '<a href="/{{ getSystemPrefix() }}/users/' + user.id + 
+                            '" target="_blank" class="badge bg-label-primary text-decoration-none"' +
+                            ' title="' + user.email + '">' +
+                            mentionText + '</a>';
+                        
+                        result = before + link + after;
+                        replacedPositions.add(startIndex);
+                        startIndex += link.length;
+                    } else {
+                        startIndex += mentionText.length;
+                    }
+                }
+            });
         });
         
-        if (html !== text) {
-            commentElement.innerHTML = html;
+        if (result !== text) {
+            commentElement.innerHTML = result;
         }
     });
 }
@@ -1499,6 +1522,9 @@ function formatMentionsInComments() {
 document.addEventListener('DOMContentLoaded', function() {
     formatMentionsInComments();
 });
+
+// Also run after any dynamic content is added (e.g., after adding a new comment)
+window.formatMentionsInComments = formatMentionsInComments;
 </script>
 
 <style>
