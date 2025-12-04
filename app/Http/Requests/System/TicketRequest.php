@@ -23,7 +23,7 @@ class TicketRequest extends FormRequest
     {
         return [
             'project_id' => 'required|exists:projects,id',
-            'title' => 'required|string|max:255',
+            'title' => 'required|string|max:500',
             'description' => 'nullable|string',
             'ticket_status_id' => 'required|exists:ticket_statuses,id',
             'priority' => 'required|string|in:low,medium,high,critical',

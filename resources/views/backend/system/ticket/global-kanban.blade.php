@@ -332,7 +332,27 @@ $priorityColors = [
                 <div class="modal-header bg-label-primary">
                     <div class="d-flex align-items-center gap-2 w-100">
                         <span class="badge bg-primary" id="view_ticket_key">TICKET-1</span>
-                        <h5 class="modal-title mb-0 flex-grow-1" id="view_ticket_title">Ticket Title</h5>
+                        <div class="flex-grow-1 d-flex align-items-center gap-2">
+                            <div id="view_ticket_title_container" class="flex-grow-1">
+                                <h5 class="modal-title mb-0" id="view_ticket_title" style="display: inline-block;">Ticket Title</h5>
+                                <button type="button" class="btn btn-sm btn-icon ms-2" id="toggle-modal-title-edit" title="Edit title">
+                                    <i class="ti ti-pencil text-white"></i>
+                                </button>
+                            </div>
+                            <div id="edit_ticket_title_container" style="display: none;" class="flex-grow-1">
+                                <input type="text" id="edit_ticket_title_input" class="form-control form-control-lg" 
+                                       value="" 
+                                       style="font-size: 1.25rem; font-weight: 500;">
+                                <div class="d-flex gap-2 mt-2">
+                                    <button type="button" class="btn btn-sm btn-primary" onclick="saveModalTitle()">
+                                        <i class="ti ti-check me-1"></i>Save
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="cancelModalTitleEdit()">
+                                        <i class="ti ti-x me-1"></i>Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                         <span class="badge bg-label-info" id="view_project_name">Project</span>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -1173,10 +1193,15 @@ $priorityColors = [
 
                             // Populate header
                             document.getElementById('view_ticket_key').textContent = ticket.ticket_key || 'N/A';
-                            document.getElementById('view_ticket_title').textContent = ticket.title ||
-                                'Untitled';
+                            const ticketTitle = ticket.title || 'Untitled';
+                            document.getElementById('view_ticket_title').textContent = ticketTitle;
+                            document.getElementById('edit_ticket_title_input').value = ticketTitle; // Reset edit input
                             document.getElementById('view_project_name').textContent = ticket.project?.name ||
                                 'N/A';
+                            
+                            // Ensure title edit container is hidden when loading new ticket
+                            document.getElementById('view_ticket_title_container').style.display = 'block';
+                            document.getElementById('edit_ticket_title_container').style.display = 'none';
 
                             // Populate description - use innerHTML to preserve HTML formatting
                             const descriptionHtml = ticket.description || 'No description provided';
@@ -1451,6 +1476,68 @@ $priorityColors = [
             document.getElementById('view_ticket_description').style.display = 'block';
             document.getElementById('edit_ticket_description_container').style.display = 'none';
         };
+
+        // Toggle Title Edit (Modal)
+        document.body.addEventListener('click', function(e) {
+            if (e.target.id === 'toggle-modal-title-edit' || e.target.closest('#toggle-modal-title-edit')) {
+                const viewContainer = document.getElementById('view_ticket_title_container');
+                const editContainer = document.getElementById('edit_ticket_title_container');
+                const currentTitle = document.getElementById('view_ticket_title').textContent.trim();
+
+                viewContainer.style.display = 'none';
+                editContainer.style.display = 'block';
+                document.getElementById('edit_ticket_title_input').value = currentTitle;
+                document.getElementById('edit_ticket_title_input').focus();
+                document.getElementById('edit_ticket_title_input').select();
+            }
+        });
+
+        // Save Modal Title
+        window.saveModalTitle = function() {
+            const ticketId = document.getElementById('edit_ticket_id').value;
+            const projectId = document.getElementById('edit_project_id').value;
+            const newTitle = document.getElementById('edit_ticket_title_input').value.trim();
+            const currentTitle = document.getElementById('view_ticket_title').textContent.trim();
+
+            if (newTitle === '' || newTitle === currentTitle) {
+                cancelModalTitleEdit();
+                return;
+            }
+
+            console.log('Saving modal title:', {ticketId, projectId, newTitle});
+            updateTicketField(ticketId, projectId, 'title', newTitle);
+
+            // Update UI
+            setTimeout(() => {
+                document.getElementById('view_ticket_title').textContent = newTitle;
+                cancelModalTitleEdit();
+            }, 500);
+        };
+
+        // Cancel Modal Title Edit
+        window.cancelModalTitleEdit = function() {
+            document.getElementById('view_ticket_title_container').style.display = 'block';
+            document.getElementById('edit_ticket_title_container').style.display = 'none';
+            const currentTitle = document.getElementById('view_ticket_title').textContent.trim();
+            document.getElementById('edit_ticket_title_input').value = currentTitle;
+        };
+
+        // Allow Enter key to save title in modal
+        document.addEventListener('DOMContentLoaded', function() {
+            const modalTitleInput = document.getElementById('edit_ticket_title_input');
+            if (modalTitleInput) {
+                modalTitleInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        saveModalTitle();
+                    }
+                    if (e.key === 'Escape') {
+                        e.preventDefault();
+                        cancelModalTitleEdit();
+                    }
+                });
+            }
+        });
 
         // Display Ticket Attachments
         function displayTicketAttachments(attachments) {
@@ -1837,7 +1924,7 @@ $priorityColors = [
                         const formData = new FormData();
                         formData.append('_method', 'PUT');
                         formData.append('project_id', projectId);
-                        formData.append('title', ticket.title);
+                        formData.append('title', fieldName === 'title' ? fieldValue : ticket.title);
                         formData.append('description', fieldName === 'description' ? fieldValue : (ticket.description || ''));
                         formData.append('ticket_status_id', fieldName === 'ticket_status_id' ? fieldValue : ticket
                             .ticket_status_id);
@@ -1855,8 +1942,8 @@ $priorityColors = [
                         console.log('FormData being sent for update:', {
                             fieldName: fieldName,
                             fieldValue: fieldValue,
-                            description: formData.get('description'),
-                            title: formData.get('title')
+                            title: formData.get('title'),
+                            description: formData.get('description')
                         });
 
                         return fetch(

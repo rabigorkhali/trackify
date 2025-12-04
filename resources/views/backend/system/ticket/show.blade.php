@@ -14,9 +14,27 @@
                                 <i class="ti ti-arrow-left"></i>
                             </a>
                             <span class="badge bg-primary" style="font-size: 0.9rem; padding: 6px 12px;">{{ $thisData->ticket_key }}</span>
-                            <h5 class="mb-0 editable-title" id="ticket-title" contenteditable="true" 
-                                style="border-bottom: 1px dashed transparent; padding: 2px 4px; cursor: text;"
-                                onblur="updateTitle(this.innerText)">{{ $thisData->title }}</h5>
+                            <div class="d-flex align-items-center gap-2 flex-grow-1">
+                                <div id="view_ticket_title_container" class="flex-grow-1">
+                                    <h5 class="mb-0" id="view_ticket_title" style="display: inline-block;">{{ $thisData->title }}</h5>
+                                    <button type="button" class="btn btn-sm btn-icon ms-2" id="toggle-title-edit" title="Edit title">
+                                        <i class="ti ti-pencil"></i>
+                                    </button>
+                                </div>
+                                <div id="edit_ticket_title_container" style="display: none;" class="flex-grow-1">
+                                    <input type="text" id="edit_ticket_title_input" class="form-control form-control-lg" 
+                                           value="{{ $thisData->title }}" 
+                                           style="font-size: 1.25rem; font-weight: 500;">
+                                    <div class="d-flex gap-2 mt-2">
+                                        <button type="button" class="btn btn-sm btn-primary" onclick="saveTitle()">
+                                            <i class="ti ti-check me-1"></i>Save
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="cancelTitleEdit()">
+                                            <i class="ti ti-x me-1"></i>Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-4 text-end mt-2 mt-md-0">
@@ -45,7 +63,7 @@
                         </div>
                         <div id="show-view-description" class="p-3 bg-light rounded" style="min-height: 80px;">
                             {!! $thisData->description ?? 'No description provided.' !!}
-                        </div>
+                    </div>
                         <div id="show-edit-description-container" style="display: none;">
                             <div id="show-description-editor" style="min-height: 200px;"></div>
                             <div class="d-flex gap-2 mt-2">
@@ -54,8 +72,8 @@
                                 </button>
                                 <button type="button" class="btn btn-sm btn-outline-secondary" onclick="cancelShowDescriptionEdit()">
                                     <i class="ti ti-x me-1"></i>Cancel
-                                </button>
-                            </div>
+                            </button>
+                        </div>
                         </div>
                     </div>
                 </div>
@@ -245,8 +263,8 @@
                                     
                                     <div class="d-flex gap-2">
                                         <button type="submit" class="btn btn-primary btn-sm" id="submit-comment-btn">
-                                            <i class="ti ti-send me-1"></i>Post Comment
-                                        </button>
+                                        <i class="ti ti-send me-1"></i>Post Comment
+                                    </button>
                                         <button type="button" class="btn btn-outline-secondary btn-sm" onclick="document.getElementById('addCommentForm').reset(); document.getElementById('file-preview').innerHTML = '';">
                                             <i class="ti ti-x me-1"></i>Clear
                                         </button>
@@ -259,29 +277,29 @@
                                         <div class="card mb-3 comment-item" data-id="{{ $comment->id }}">
                                             <div class="card-body">
                                                 <div class="d-flex gap-3">
-                                                    <div class="avatar avatar-md">
-                                                        <span class="avatar-initial rounded-circle bg-label-primary">
-                                                            {{ strtoupper(substr($comment->user->name, 0, 2)) }}
-                                                        </span>
-                                                    </div>
-                                                    <div class="flex-grow-1">
+                                            <div class="avatar avatar-md">
+                                                <span class="avatar-initial rounded-circle bg-label-primary">
+                                                    {{ strtoupper(substr($comment->user->name, 0, 2)) }}
+                                                </span>
+                                            </div>
+                                            <div class="flex-grow-1">
                                                         <div class="d-flex justify-content-between align-items-start mb-2">
-                                                            <div>
-                                                                <h6 class="mb-0">{{ $comment->user->name }}</h6>
+                                                    <div>
+                                                        <h6 class="mb-0">{{ $comment->user->name }}</h6>
                                                                 <small class="text-muted">
                                                                     <i class="ti ti-clock-hour-4 me-1"></i>{{ $comment->created_at->format('M d, Y \a\t h:i A') }}
                                                                     <span class="mx-1">•</span>
                                                                     {{ $comment->created_at->diffForHumans() }}
                                                                 </small>
-                                                            </div>
-                                                            @if(auth()->id() == $comment->user_id)
+                                                    </div>
+                                                    @if(auth()->id() == $comment->user_id)
                                                                 <button type="button" class="btn btn-sm btn-icon btn-outline-danger" 
                                                                         onclick="deleteComment({{ $comment->id }})"
                                                                         title="Delete comment">
                                                                     <i class="ti ti-trash"></i>
-                                                                </button>
-                                                            @endif
-                                                        </div>
+                                                        </button>
+                                                    @endif
+                                                </div>
                                                         <div class="comment-text p-3 bg-light rounded" style="white-space: pre-wrap;">{{ $comment->comment }}</div>
                                                         
                                                         <!-- Comment Attachments -->
@@ -379,7 +397,7 @@
                                 </div>
 
                                 <div class="row g-2">
-                                    @forelse($thisData->attachments as $attachment)
+                                @forelse($thisData->attachments as $attachment)
                                         @php
                                             $extension = pathinfo($attachment->file_name, PATHINFO_EXTENSION);
                                             $isImage = in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif', 'webp']);
@@ -418,27 +436,27 @@
                                                                     {{ Str::limit($attachment->file_name, 30) }}
                                                                 </a>
                                                                 <small class="text-muted">{{ $attachment->user->name }} • {{ $attachment->created_at->format('M d, Y') }}</small>
-                                                            </div>
-                                                            @if(auth()->id() == $attachment->user_id)
+                                        </div>
+                                        @if(auth()->id() == $attachment->user_id)
                                                                 <button type="button" class="btn btn-sm btn-icon btn-outline-danger" 
                                                                         onclick="deleteShowAttachment({{ $attachment->id }})"
                                                                         title="Delete">
                                                                     <i class="ti ti-trash"></i>
-                                                                </button>
+                                            </button>
                                                             @endif
                                                         </div>
                                                     </div>
                                                 </div>
-                                            @endif
-                                        </div>
-                                    @empty
+                                        @endif
+                                    </div>
+                                @empty
                                         <div class="col-12">
                                             <div class="text-center py-5">
                                                 <i class="ti ti-paperclip-off" style="font-size: 3rem; opacity: 0.3;"></i>
                                                 <p class="text-muted mt-2">No attachments yet. Click "Upload Files" to add attachments.</p>
                                             </div>
                                         </div>
-                                    @endforelse
+                                @endforelse
                                 </div>
                             </div>
                         </div>
@@ -525,20 +543,20 @@
                         </div>
 
                         <!-- Due Date -->
-                        <div class="mb-3">
+                            <div class="mb-3">
                             <label class="form-label small text-muted mb-1"><i class="ti ti-calendar me-1"></i>Due Date</label>
                             <input type="date" class="form-control form-control-sm quick-update-field" 
                                    name="due_date" data-field="due_date" 
                                    value="{{ $thisData->due_date ? $thisData->due_date->format('Y-m-d') : '' }}">
-                        </div>
+                            </div>
 
                         <!-- Story Points -->
-                        <div class="mb-3">
+                            <div class="mb-3">
                             <label class="form-label small text-muted mb-1"><i class="ti ti-star me-1"></i>Story Points</label>
                             <input type="number" class="form-control form-control-sm quick-update-field" 
                                    name="story_points" data-field="story_points" min="0" step="0.5"
                                    value="{{ $thisData->story_points ?? '' }}" placeholder="e.g., 3, 5, 8">
-                        </div>
+                            </div>
 
                         <hr>
 
@@ -1082,17 +1100,80 @@ window.cancelShowDescriptionEdit = function() {
     document.getElementById('show-edit-description-container').style.display = 'none';
 };
 
-// Update Title
-function updateTitle(newTitle) {
-    if (newTitle.trim() === '' || newTitle === '{{ $thisData->title }}') return;
+// Store original title (properly escaped)
+const originalTicketTitle = {!! json_encode($thisData->title) !!};
+
+// Save Title
+window.saveTitle = function() {
+    const newTitle = document.getElementById('edit_ticket_title_input').value.trim();
+    if (newTitle === '' || newTitle === originalTicketTitle) {
+        cancelTitleEdit();
+        return;
+    }
     quickUpdateField('title', newTitle);
+    
+    // Update UI
+    setTimeout(() => {
+        document.getElementById('view_ticket_title').textContent = newTitle;
+        cancelTitleEdit();
+    }, 500);
+};
+
+// Cancel Title Edit
+window.cancelTitleEdit = function() {
+    document.getElementById('view_ticket_title_container').style.display = 'block';
+    document.getElementById('edit_ticket_title_container').style.display = 'none';
+    document.getElementById('edit_ticket_title_input').value = originalTicketTitle;
+};
+
+// Initialize Title Edit functionality
+function initTitleEdit() {
+    console.log('Initializing title edit...');
+    
+    // Toggle Title Edit - Click handler
+    const toggleTitleBtn = document.getElementById('toggle-title-edit');
+    console.log('Toggle button found:', toggleTitleBtn);
+    
+    if (toggleTitleBtn) {
+        toggleTitleBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Title edit button clicked!');
+            document.getElementById('view_ticket_title_container').style.display = 'none';
+            document.getElementById('edit_ticket_title_container').style.display = 'block';
+            document.getElementById('edit_ticket_title_input').focus();
+            document.getElementById('edit_ticket_title_input').select();
+        });
+        console.log('Title edit click listener attached!');
+    } else {
+        console.error('Toggle title button not found!');
+    }
+    
+    // Allow Enter/Escape keys in title input
+    const titleInput = document.getElementById('edit_ticket_title_input');
+    if (titleInput) {
+        titleInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                saveTitle();
+            }
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                cancelTitleEdit();
+            }
+        });
+    }
 }
 
-// Update Description  
-function updateDescription(newDescription) {
-    if (newDescription === '{{ $thisData->description }}') return;
-    quickUpdateField('description', newDescription);
+// Run initialization - handles both cases (DOM ready or not)
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTitleEdit);
+} else {
+    // DOM is already ready, run immediately
+    initTitleEdit();
 }
+
+// Store original description (properly escaped) - used by rich text editor
+const originalTicketDescription = {!! json_encode($thisData->description) !!};
 
 // Quick field update function
 function quickUpdateField(fieldName, fieldValue) {
@@ -1195,8 +1276,16 @@ function updateTicketField(ticketId, fieldName, fieldValue) {
             const formData = new FormData();
             formData.append('_method', 'PUT');
             formData.append('project_id', {{ $project->id }});
-            formData.append('title', ticket.title);
+            formData.append('title', fieldName === 'title' ? fieldValue : ticket.title);
             formData.append('description', fieldName === 'description' ? fieldValue : (ticket.description || ''));
+            
+            // Debug: Log what we're sending
+            console.log('FormData for update:', {
+                fieldName: fieldName,
+                fieldValue: fieldValue,
+                title: formData.get('title'),
+                description: formData.get('description')
+            });
             formData.append('ticket_status_id', fieldName === 'ticket_status_id' ? fieldValue : ticket.ticket_status_id);
             formData.append('priority', fieldName === 'priority' ? fieldValue : ticket.priority);
             formData.append('type', fieldName === 'type' ? fieldValue : ticket.type);

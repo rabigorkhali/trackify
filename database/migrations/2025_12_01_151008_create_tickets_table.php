@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->id();
             $table->unsignedBigInteger('project_id');
             $table->string('ticket_key')->unique();
-            $table->string('title');
+            $table->text('title');
             $table->text('description')->nullable();
             $table->unsignedBigInteger('ticket_status_id');
             $table->string('priority')->default('medium'); // low, medium, high, critical
