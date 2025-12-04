@@ -1606,43 +1606,51 @@ window.formatMentionsInComments = formatMentionsInComments;
     background-color: rgba(105, 108, 255, 0.08);
 }
 
-/* Quill List Display Fixes */
-/* Fix bullet lists displayed as numbered lists */
-ol[data-list="bullet"],
-ol li[data-list="bullet"] {
+/* Quill List Display Fixes - ONLY for display mode, NOT in editor */
+/* Fix bullet lists displayed as numbered lists - only outside Quill editor */
+#show-view-description ol[data-list="bullet"]:not(.ql-editor ol),
+#show-view-description ol li[data-list="bullet"]:not(.ql-editor li),
+.comment-text ol[data-list="bullet"]:not(.ql-editor ol),
+.comment-text ol li[data-list="bullet"]:not(.ql-editor li),
+#view_ticket_description ol[data-list="bullet"]:not(.ql-editor ol),
+#view_ticket_description ol li[data-list="bullet"]:not(.ql-editor li) {
     list-style-type: disc !important;
 }
 
-/* Ensure ordered lists display as numbers */
-ol[data-list="ordered"],
-ol li[data-list="ordered"] {
+/* Ensure ordered lists display as numbers - only outside Quill editor */
+#show-view-description ol[data-list="ordered"]:not(.ql-editor ol),
+#show-view-description ol li[data-list="ordered"]:not(.ql-editor li),
+.comment-text ol[data-list="ordered"]:not(.ql-editor ol),
+.comment-text ol li[data-list="ordered"]:not(.ql-editor li),
+#view_ticket_description ol[data-list="ordered"]:not(.ql-editor ol),
+#view_ticket_description ol li[data-list="ordered"]:not(.ql-editor li) {
     list-style-type: decimal !important;
 }
 
-/* Hide Quill's internal UI elements in display mode */
-#show-view-description .ql-ui,
-.comment-text .ql-ui,
-#view_ticket_description .ql-ui {
+/* Hide Quill's internal UI elements in display mode ONLY (not in editor) */
+#show-view-description:not(.ql-editor) .ql-ui,
+.comment-text:not(.ql-editor) .ql-ui,
+#view_ticket_description:not(.ql-editor) .ql-ui {
     display: none;
 }
 
-/* Style lists properly in description display */
-#show-view-description ol,
-#show-view-description ul,
-.comment-text ol,
-.comment-text ul,
-#view_ticket_description ol,
-#view_ticket_description ul {
+/* Style lists properly in description display - only in view mode */
+#show-view-description:not(.ql-editor) ol,
+#show-view-description:not(.ql-editor) ul,
+.comment-text:not(.ql-editor) ol,
+.comment-text:not(.ql-editor) ul,
+#view_ticket_description:not(.ql-editor) ol,
+#view_ticket_description:not(.ql-editor) ul {
     padding-left: 1.5rem;
     margin-bottom: 0.5rem;
 }
 
-#show-view-description ol li,
-#show-view-description ul li,
-.comment-text ol li,
-.comment-text ul li,
-#view_ticket_description ol li,
-#view_ticket_description ul li {
+#show-view-description:not(.ql-editor) ol li,
+#show-view-description:not(.ql-editor) ul li,
+.comment-text:not(.ql-editor) ol li,
+.comment-text:not(.ql-editor) ul li,
+#view_ticket_description:not(.ql-editor) ol li,
+#view_ticket_description:not(.ql-editor) ul li {
     margin-bottom: 0.25rem;
 }
 </style>

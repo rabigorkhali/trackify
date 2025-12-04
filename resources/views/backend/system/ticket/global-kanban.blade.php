@@ -2225,38 +2225,42 @@ $priorityColors = [
             }
         }
 
-        /* Quill List Display Fixes */
-        /* Fix bullet lists displayed as numbered lists */
-        ol[data-list="bullet"],
-        ol li[data-list="bullet"] {
+        /* Quill List Display Fixes - ONLY for display mode, NOT in editor */
+        /* Fix bullet lists displayed as numbered lists - only outside Quill editor */
+        #view_ticket_description:not(.ql-editor) ol[data-list="bullet"],
+        #view_ticket_description:not(.ql-editor) ol li[data-list="bullet"],
+        .comment-text:not(.ql-editor) ol[data-list="bullet"],
+        .comment-text:not(.ql-editor) ol li[data-list="bullet"] {
             list-style-type: disc !important;
         }
 
-        /* Ensure ordered lists display as numbers */
-        ol[data-list="ordered"],
-        ol li[data-list="ordered"] {
+        /* Ensure ordered lists display as numbers - only outside Quill editor */
+        #view_ticket_description:not(.ql-editor) ol[data-list="ordered"],
+        #view_ticket_description:not(.ql-editor) ol li[data-list="ordered"],
+        .comment-text:not(.ql-editor) ol[data-list="ordered"],
+        .comment-text:not(.ql-editor) ol li[data-list="ordered"] {
             list-style-type: decimal !important;
         }
 
-        /* Hide Quill's internal UI elements in display mode */
-        #view_ticket_description .ql-ui,
-        .comment-text .ql-ui {
+        /* Hide Quill's internal UI elements in display mode ONLY (not in editor) */
+        #view_ticket_description:not(.ql-editor) .ql-ui,
+        .comment-text:not(.ql-editor) .ql-ui {
             display: none;
         }
 
-        /* Style lists properly in description display */
-        #view_ticket_description ol,
-        #view_ticket_description ul,
-        .comment-text ol,
-        .comment-text ul {
+        /* Style lists properly in description display - only in view mode */
+        #view_ticket_description:not(.ql-editor) ol,
+        #view_ticket_description:not(.ql-editor) ul,
+        .comment-text:not(.ql-editor) ol,
+        .comment-text:not(.ql-editor) ul {
             padding-left: 1.5rem;
             margin-bottom: 0.5rem;
         }
 
-        #view_ticket_description ol li,
-        #view_ticket_description ul li,
-        .comment-text ol li,
-        .comment-text ul li {
+        #view_ticket_description:not(.ql-editor) ol li,
+        #view_ticket_description:not(.ql-editor) ul li,
+        .comment-text:not(.ql-editor) ol li,
+        .comment-text:not(.ql-editor) ul li {
             margin-bottom: 0.25rem;
         }
     </style>
