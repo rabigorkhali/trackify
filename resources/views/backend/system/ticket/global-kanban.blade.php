@@ -2224,5 +2224,40 @@ $priorityColors = [
                 opacity: 1;
             }
         }
+
+        /* Quill List Display Fixes */
+        /* Fix bullet lists displayed as numbered lists */
+        ol[data-list="bullet"],
+        ol li[data-list="bullet"] {
+            list-style-type: disc !important;
+        }
+
+        /* Ensure ordered lists display as numbers */
+        ol[data-list="ordered"],
+        ol li[data-list="ordered"] {
+            list-style-type: decimal !important;
+        }
+
+        /* Hide Quill's internal UI elements in display mode */
+        #view_ticket_description .ql-ui,
+        .comment-text .ql-ui {
+            display: none;
+        }
+
+        /* Style lists properly in description display */
+        #view_ticket_description ol,
+        #view_ticket_description ul,
+        .comment-text ol,
+        .comment-text ul {
+            padding-left: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        #view_ticket_description ol li,
+        #view_ticket_description ul li,
+        .comment-text ol li,
+        .comment-text ul li {
+            margin-bottom: 0.25rem;
+        }
     </style>
 @endsection

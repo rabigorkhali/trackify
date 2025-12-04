@@ -1605,5 +1605,45 @@ window.formatMentionsInComments = formatMentionsInComments;
     border-bottom-color: #696cff !important;
     background-color: rgba(105, 108, 255, 0.08);
 }
+
+/* Quill List Display Fixes */
+/* Fix bullet lists displayed as numbered lists */
+ol[data-list="bullet"],
+ol li[data-list="bullet"] {
+    list-style-type: disc !important;
+}
+
+/* Ensure ordered lists display as numbers */
+ol[data-list="ordered"],
+ol li[data-list="ordered"] {
+    list-style-type: decimal !important;
+}
+
+/* Hide Quill's internal UI elements in display mode */
+#show-view-description .ql-ui,
+.comment-text .ql-ui,
+#view_ticket_description .ql-ui {
+    display: none;
+}
+
+/* Style lists properly in description display */
+#show-view-description ol,
+#show-view-description ul,
+.comment-text ol,
+.comment-text ul,
+#view_ticket_description ol,
+#view_ticket_description ul {
+    padding-left: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+#show-view-description ol li,
+#show-view-description ul li,
+.comment-text ol li,
+.comment-text ul li,
+#view_ticket_description ol li,
+#view_ticket_description ul li {
+    margin-bottom: 0.25rem;
+}
 </style>
 @endsection
