@@ -687,7 +687,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const formData = new FormData(this);
             
-            fetch(`/{{ getSystemPrefix() }}/projects/${projectId}/tickets`, {
+            fetch(`{{ url('') }}/{{ getSystemPrefix() }}/projects/${projectId}/tickets`, {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken,
@@ -823,7 +823,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load full ticket details
     function loadTicketDetails(ticketId, projectId) {
-        fetch(`/{{ getSystemPrefix() }}/projects/${projectId}/tickets/${ticketId}/show`, {
+        fetch(`{{ url('') }}/{{ getSystemPrefix() }}/projects/${projectId}/tickets/${ticketId}/show`, {
             headers: {
                 'Accept': 'application/json',
                 'X-CSRF-TOKEN': csrfToken
@@ -1174,7 +1174,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         showNotification(`Uploading ${input.files.length} file(s)...`, 'info');
         
-        fetch(`/{{ getSystemPrefix() }}/tickets/${ticketId}/upload-attachments`, {
+        fetch(`{{ url('') }}/{{ getSystemPrefix() }}/tickets/${ticketId}/upload-attachments`, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
@@ -1210,7 +1210,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         showNotification('Deleting attachment...', 'info');
         
-        fetch(`/{{ getSystemPrefix() }}/ticket-attachments/${attachmentId}`, {
+        fetch(`{{ url('') }}/{{ getSystemPrefix() }}/ticket-attachments/${attachmentId}`, {
             method: 'DELETE',
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
@@ -1243,7 +1243,7 @@ document.addEventListener('DOMContentLoaded', function() {
             commentElement.style.opacity = '0.5';
         }
         
-        fetch(`/{{ getSystemPrefix() }}/ticket-comments/${commentId}`, {
+        fetch(`{{ url('') }}/{{ getSystemPrefix() }}/ticket-comments/${commentId}`, {
             method: 'DELETE',
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
@@ -1330,7 +1330,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Reload comments
     function loadComments(ticketId, projectId) {
-        fetch(`/{{ getSystemPrefix() }}/projects/${projectId}/tickets/${ticketId}/show`, {
+        fetch(`{{ url('') }}/{{ getSystemPrefix() }}/projects/${projectId}/tickets/${ticketId}/show`, {
             headers: {
                 'Accept': 'application/json',
                 'X-CSRF-TOKEN': csrfToken
@@ -1349,7 +1349,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Reload activities
     function loadActivities(ticketId, projectId) {
-        fetch(`/{{ getSystemPrefix() }}/projects/${projectId}/tickets/${ticketId}/show`, {
+        fetch(`{{ url('') }}/{{ getSystemPrefix() }}/projects/${projectId}/tickets/${ticketId}/show`, {
             headers: {
                 'Accept': 'application/json',
                 'X-CSRF-TOKEN': csrfToken
@@ -1435,7 +1435,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateTicketField(ticketId, projectId, fieldName, fieldValue) {
         showNotification('Updating...', 'info');
         
-        fetch(`/{{ getSystemPrefix() }}/projects/${projectId}/tickets/${ticketId}/show`, {
+        fetch(`{{ url('') }}/{{ getSystemPrefix() }}/projects/${projectId}/tickets/${ticketId}/show`, {
             headers: {
                 'Accept': 'application/json',
                 'X-CSRF-TOKEN': csrfToken
@@ -1459,7 +1459,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 formData.append('story_points', fieldName === 'story_points' ? (fieldValue || '') : (ticket.story_points || ''));
                 formData.append('status', ticket.status);
                 
-                return fetch(`/{{ getSystemPrefix() }}/projects/${projectId}/tickets/${ticketId}`, {
+                return fetch(`{{ url('') }}/{{ getSystemPrefix() }}/projects/${projectId}/tickets/${ticketId}`, {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': csrfToken,
