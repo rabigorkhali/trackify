@@ -14,22 +14,22 @@
                                 <i class="ti ti-arrow-left"></i>
                             </a>
                             <span class="badge bg-primary" style="font-size: 0.9rem; padding: 6px 12px;">{{ $thisData->ticket_key }}</span>
-                            <div class="d-flex align-items-center gap-2 flex-grow-1">
-                                <div id="view_ticket_title_container" class="flex-grow-1">
-                                    <h5 class="mb-0" id="view_ticket_title" style="display: inline-block;">{{ $thisData->title }}</h5>
-                                    <button type="button" class="btn btn-sm btn-icon ms-2" id="toggle-title-edit" title="Edit title">
+                            <div class="d-flex align-items-start gap-2 flex-grow-1" style="min-width: 0;">
+                                <div id="view_ticket_title_container" class="flex-grow-1 position-relative" style="min-width: 0; padding-right: 40px;">
+                                    <h5 class="mb-0 pe-2" id="view_ticket_title" style="word-break: break-word; overflow-wrap: break-word; white-space: normal; line-height: 1.4;">{{ $thisData->title }}</h5>
+                                    <button type="button" class="btn btn-sm btn-icon" id="toggle-title-edit" title="Edit title" style="position: absolute; top: -5px; right: 0;">
                                         <i class="ti ti-pencil"></i>
                                     </button>
                                 </div>
-                                <div id="edit_ticket_title_container" style="display: none;" class="flex-grow-1">
-                                    <input type="text" id="edit_ticket_title_input" class="form-control form-control-lg" 
-                                           value="{{ $thisData->title }}" 
-                                           style="font-size: 1.25rem; font-weight: 500;">
+                                <div id="edit_ticket_title_container" style="display: none; min-width: 0;" class="flex-grow-1">
+                                    <textarea id="edit_ticket_title_input" class="form-control form-control-lg" 
+                                              rows="2"
+                                              style="font-size: 1.25rem; font-weight: 500; resize: vertical; overflow-y: auto;">{{ $thisData->title }}</textarea>
                                     <div class="d-flex gap-2 mt-2">
-                                        <button type="button" class="btn btn-sm btn-primary" onclick="saveTitle()">
+                                        <button type="button" class="btn btn-sm btn-primary" onclick="saveTitle()" title="Ctrl+Enter to save">
                                             <i class="ti ti-check me-1"></i>Save
                                         </button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="cancelTitleEdit()">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="cancelTitleEdit()" title="Esc to cancel">
                                             <i class="ti ti-x me-1"></i>Cancel
                                         </button>
                                     </div>
@@ -1148,11 +1148,11 @@ function initTitleEdit() {
         console.error('Toggle title button not found!');
     }
     
-    // Allow Enter/Escape keys in title input
+    // Allow Escape key in title textarea (Enter creates new line, Ctrl+Enter saves)
     const titleInput = document.getElementById('edit_ticket_title_input');
     if (titleInput) {
         titleInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
+            if (e.key === 'Enter' && e.ctrlKey) {
                 e.preventDefault();
                 saveTitle();
             }

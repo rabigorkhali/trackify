@@ -336,7 +336,7 @@ $priorityColors = [
                             <div id="view_ticket_title_container" class="flex-grow-1">
                                 <h5 class="modal-title mb-0" id="view_ticket_title" style="display: inline-block;">Ticket Title</h5>
                                 <button type="button" class="btn btn-sm btn-icon ms-2" id="toggle-modal-title-edit" title="Edit title">
-                                    <i class="ti ti-pencil text-white"></i>
+                                    <i class="ti ti-pencil text-black"></i>
                                 </button>
                             </div>
                             <div id="edit_ticket_title_container" style="display: none;" class="flex-grow-1">
