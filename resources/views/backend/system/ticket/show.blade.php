@@ -44,7 +44,7 @@
                             </button>
                         </div>
                         <div id="show-view-description" class="p-3 bg-light rounded" style="min-height: 80px;">
-                            {!! nl2br(e($thisData->description ?? 'No description provided.')) !!}
+                            {!! $thisData->description ?? 'No description provided.' !!}
                         </div>
                         <div id="show-edit-description-container" style="display: none;">
                             <div id="show-description-editor" style="min-height: 200px;"></div>
@@ -56,28 +56,6 @@
                                     <i class="ti ti-x me-1"></i>Cancel
                                 </button>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Labels Section -->
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="card-title mb-0"><i class="ti ti-tag me-2"></i>Labels</h6>
-                            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addLabelModal">
-                                <i class="ti ti-plus me-1"></i>Add Label
-                            </button>
-                        </div>
-                        <div class="d-flex flex-wrap gap-2" id="labels-container">
-                            @forelse($thisData->labels as $label)
-                                <span class="badge d-flex align-items-center gap-1" style="background-color: {{ $label->color }}; font-size: 0.85rem; padding: 6px 10px;">
-                                    {{ $label->name }}
-                                    <i class="ti ti-x cursor-pointer" onclick="removeLabel({{ $label->id }})" style="font-size: 0.9rem;"></i>
-                                </span>
-                            @empty
-                                <span class="text-muted">No labels yet</span>
-                            @endforelse
                         </div>
                     </div>
                 </div>
@@ -650,30 +628,6 @@
         </div>
     </div>
 
-    <!-- Add Label Modal -->
-    <div class="modal fade" id="addLabelModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Add Label</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <select id="label-select" class="form-control">
-                        <option value="">Select a label</option>
-                        @foreach($labels ?? [] as $label)
-                            <option value="{{ $label->id }}" data-color="{{ $label->color }}">{{ $label->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="addLabel()">Add</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Add Checklist Modal -->
     <div class="modal fade" id="addChecklistModal" tabindex="-1">
         <div class="modal-dialog">
@@ -999,28 +953,6 @@ function deleteComment(commentId) {
     }
 }
 
-// Add Label
-function addLabel() {
-    const labelId = document.getElementById('label-select').value;
-    if (!labelId) return alert('Please select a label');
-    
-    fetch(`/{{ getSystemPrefix() }}/tickets/${ticketId}/labels`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken},
-        body: JSON.stringify({label_id: labelId})
-    })
-    .then(() => location.reload());
-}
-
-// Remove Label
-function removeLabel(labelId) {
-    fetch(`/{{ getSystemPrefix() }}/tickets/${ticketId}/labels/${labelId}`, {
-        method: 'DELETE',
-        headers: {'X-CSRF-TOKEN': csrfToken}
-    })
-    .then(() => location.reload());
-}
-
 // Add Checklist
 document.getElementById('addChecklistForm')?.addEventListener('submit', function(e) {
     e.preventDefault();
@@ -1132,18 +1064,14 @@ document.getElementById('toggle-show-description-edit')?.addEventListener('click
 window.saveShowDescription = function() {
     if (!showDescriptionQuill) return;
     
-    const newDescription = showDescriptionQuill.root.innerHTML.trim();
+    const htmlContent = showDescriptionQuill.root.innerHTML.trim();
     
-    // Convert HTML to plain text for backend
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = newDescription;
-    const plainText = tempDiv.innerText || tempDiv.textContent || '';
-    
-    quickUpdateField('description', plainText);
+    console.log('Saving show page description:', {htmlContent});
+    quickUpdateField('description', htmlContent);
     
     // Update UI
     setTimeout(() => {
-        document.getElementById('show-view-description').innerHTML = newDescription || 'No description provided.';
+        document.getElementById('show-view-description').innerHTML = htmlContent || 'No description provided.';
         cancelShowDescriptionEdit();
     }, 500);
 };
@@ -1170,34 +1098,54 @@ function updateDescription(newDescription) {
 function quickUpdateField(fieldName, fieldValue) {
     console.log('Quick updating:', fieldName, 'to:', fieldValue);
     
-    const formData = new FormData();
-    formData.append('_method', 'PUT');
-    formData.append('project_id', {{ $project->id }});
-    
-    // Preserve current values and update only the changed field
-    formData.append('title', fieldName === 'title' ? fieldValue : '{{ $thisData->title }}');
-    formData.append('description', fieldName === 'description' ? fieldValue : `{{ $thisData->description ?? '' }}`);
-    formData.append('ticket_status_id', fieldName === 'ticket_status_id' ? fieldValue : {{ $thisData->ticket_status_id }});
-    formData.append('priority', fieldName === 'priority' ? fieldValue : '{{ $thisData->priority }}');
-    formData.append('type', fieldName === 'type' ? fieldValue : '{{ $thisData->type }}');
-    formData.append('assignee_id', fieldName === 'assignee_id' ? fieldValue : '{{ $thisData->assignee_id ?? '' }}');
-    formData.append('due_date', fieldName === 'due_date' ? fieldValue : '{{ $thisData->due_date ? $thisData->due_date->format('Y-m-d') : '' }}');
-    formData.append('story_points', fieldName === 'story_points' ? fieldValue : '{{ $thisData->story_points ?? '' }}');
-    formData.append('status', {{ $thisData->status }});
-    
-    // Show loading toast
-    showToast('info', 'Updating...');
-    
-    fetch(`/{{ getSystemPrefix() }}/projects/{{ $project->id }}/tickets/{{ $thisData->id }}`, {
-        method: 'POST',
+    // Fetch current ticket data first, then update with new value
+    const cacheBuster = new Date().getTime();
+    fetch(`/{{ getSystemPrefix() }}/projects/{{ $project->id }}/tickets/{{ $thisData->id }}/show?_=${cacheBuster}`, {
         headers: {
+            'Accept': 'application/json',
             'X-CSRF-TOKEN': csrfToken,
-            'Accept': 'application/json'
-        },
-        body: formData
+            'Cache-Control': 'no-cache'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.ticket) {
+            const ticket = data.ticket;
+            
+            const formData = new FormData();
+            formData.append('_method', 'PUT');
+            formData.append('project_id', {{ $project->id }});
+            formData.append('title', fieldName === 'title' ? fieldValue : ticket.title);
+            formData.append('description', fieldName === 'description' ? fieldValue : (ticket.description || ''));
+            formData.append('ticket_status_id', fieldName === 'ticket_status_id' ? fieldValue : ticket.ticket_status_id);
+            formData.append('priority', fieldName === 'priority' ? fieldValue : ticket.priority);
+            formData.append('type', fieldName === 'type' ? fieldValue : ticket.type);
+            formData.append('assignee_id', fieldName === 'assignee_id' ? (fieldValue || '') : (ticket.assignee_id || ''));
+            formData.append('due_date', fieldName === 'due_date' ? (fieldValue || '') : (ticket.due_date || ''));
+            formData.append('story_points', fieldName === 'story_points' ? (fieldValue || '') : (ticket.story_points || ''));
+            formData.append('status', ticket.status);
+            
+            console.log('FormData for update:', {
+                fieldName: fieldName,
+                fieldValue: fieldValue,
+                description: formData.get('description')
+            });
+            
+            // Show loading toast
+            showToast('info', 'Updating...');
+            
+            return fetch(`/{{ getSystemPrefix() }}/projects/{{ $project->id }}/tickets/{{ $thisData->id }}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+        }
     })
     .then(response => {
-        if (response.ok || response.redirected) {
+        if (response && (response.ok || response.redirected)) {
             showToast('success', ucfirst(fieldName.replace('_', ' ')) + ' updated!');
             setTimeout(() => location.reload(), 1000);
         } else {
@@ -1248,7 +1196,7 @@ function updateTicketField(ticketId, fieldName, fieldValue) {
             formData.append('_method', 'PUT');
             formData.append('project_id', {{ $project->id }});
             formData.append('title', ticket.title);
-            formData.append('description', ticket.description || '');
+            formData.append('description', fieldName === 'description' ? fieldValue : (ticket.description || ''));
             formData.append('ticket_status_id', fieldName === 'ticket_status_id' ? fieldValue : ticket.ticket_status_id);
             formData.append('priority', fieldName === 'priority' ? fieldValue : ticket.priority);
             formData.append('type', fieldName === 'type' ? fieldValue : ticket.type);

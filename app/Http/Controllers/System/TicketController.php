@@ -222,6 +222,17 @@ class TicketController extends ResourceController
      */
     public function update($id)
     {
+        \Log::info('TicketController update() - RAW PARAMETERS', [
+            'id_param' => $id,
+            'route_ticket' => request()->route('ticket'),
+            'route_project' => request()->route('project'),
+            'all_route_params' => request()->route()->parameters(),
+            'url' => request()->fullUrl(),
+        ]);
+        
+        // Get the correct ticket ID from route parameter
+        $ticketId = request()->route('ticket') ?? $id;
+        
         if (!empty($this->updateValidationRequest())) {
             $request = $this->updateValidationRequest();
         } elseif (!empty($this->storeValidationRequest())) {
@@ -234,8 +245,32 @@ class TicketController extends ResourceController
         $projectId = request()->route('project') ?? $this->moduleId;
         $this->setModuleId($projectId);
         $request->merge(['project_id' => $projectId]);
+        
+        \Log::info('TicketController update() called', [
+            'ticket_id' => $ticketId,
+            'project_id' => $projectId,
+            'request_data' => $request->except(['_token', '_method']),
+            'description' => $request->description,
+            'is_ajax' => $request->ajax(),
+            'wants_json' => $request->wantsJson(),
+        ]);
+        
         try {
-            $this->service->update($request, $id);
+            $updatedTicket = $this->service->update($request, $ticketId);
+            
+            \Log::info('Ticket updated successfully', [
+                'ticket_id' => $ticketId,
+                'updated_description' => $updatedTicket->description,
+            ]);
+
+            // Return JSON for AJAX requests
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Ticket updated successfully',
+                    'ticket' => $updatedTicket
+                ]);
+            }
 
             return redirect($this->getUrl())->withErrors(['success' => 'Successfully updated.']);
         } catch (\Throwable $th) {

@@ -6,11 +6,6 @@
         <div class="card mb-4">
             <h5 class="card-header d-flex justify-content-between align-items-center flex-wrap">
                 <span class="mb-2 mb-md-0"><i class="ti ti-layout-board me-2"></i>{{ $title }}</span>
-                <div class="d-flex gap-2 flex-wrap">
-                    <a href="{{ route('ticket-labels.index') }}" class="btn btn-label-info btn-sm">
-                        <i class="ti ti-tag me-1"></i>Manage Labels
-                    </a>
-                </div>
             </h5>
             <div class="card-body">
                 <!-- Stats Info -->
@@ -180,24 +175,6 @@
                                         <!-- Title -->
                                         <h6 class="mb-2" style="font-size: 0.9rem; font-weight: 600; line-height: 1.4;">
                                             {{ Str::limit($ticket->title, 60) }}</h6>
-
-                                        <!-- Labels -->
-                                        @if ($ticket->labels && $ticket->labels->count() > 0)
-                                            <div class="mb-2 d-flex flex-wrap gap-1">
-                                                @foreach ($ticket->labels->take(3) as $label)
-                                                    <span class="badge"
-                                                        style="background-color: {{ $label->color }}; font-size: 0.65rem; padding: 3px 8px;">
-                                                        {{ $label->name }}
-                                                    </span>
-                                                @endforeach
-                                                @if ($ticket->labels->count() > 3)
-                                                    <span class="badge bg-label-secondary"
-                                                        style="font-size: 0.65rem; padding: 3px 8px;">
-                                                        +{{ $ticket->labels->count() - 3 }}
-                                                    </span>
-                                                @endif
-                                            </div>
-                                        @endif
 
                                         <!-- Metadata -->
                                         <div class="d-flex justify-content-between align-items-center mt-2"
@@ -643,27 +620,6 @@ $priorityColors = [
                                             <div id="create_attachments_preview" class="mt-2"></div>
                                         </div>
 
-                                        <!-- Labels -->
-                                        @php
-                                            $labels = \App\Models\TicketLabel::where('status', 1)->get();
-                                        @endphp
-                                        @if ($labels->count() > 0)
-                                            <div class="col-md-12">
-                                                <label class="form-label"><i
-                                                        class="ti ti-tag me-1"></i>{{ __('Labels') }}</label>
-                                                <select class="form-control" name="labels[]" id="create_labels" multiple
-                                                    style="height: 120px;">
-                                                    @foreach ($labels as $label)
-                                                        <option value="{{ $label->id }}"
-                                                            style="background-color: {{ $label->color }}20; padding: 8px;">
-                                                            {{ $label->name }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                                <div class="form-text">Hold Ctrl/Cmd to select multiple labels</div>
-                                            </div>
-                                        @endif
-
                                         <!-- Checklist Items -->
                                         <div class="col-md-12">
                                             <label class="form-label"><i
@@ -1001,13 +957,10 @@ $priorityColors = [
                         return;
                     }
 
-                    // Get description from Quill editor
+                    // Get description from Quill editor - save as HTML
                     if (createDescriptionQuill) {
                         const htmlContent = createDescriptionQuill.root.innerHTML.trim();
-                        const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = htmlContent;
-                        const plainText = tempDiv.innerText || tempDiv.textContent || '';
-                        document.getElementById('create_description').value = plainText;
+                        document.getElementById('create_description').value = htmlContent;
                     }
 
                     submitBtn.disabled = true;
@@ -1225,9 +1178,9 @@ $priorityColors = [
                             document.getElementById('view_project_name').textContent = ticket.project?.name ||
                                 'N/A';
 
-                            // Populate description
-                            const descriptionText = ticket.description || 'No description provided';
-                            document.getElementById('view_ticket_description').textContent = descriptionText;
+                            // Populate description - use innerHTML to preserve HTML formatting
+                            const descriptionHtml = ticket.description || 'No description provided';
+                            document.getElementById('view_ticket_description').innerHTML = descriptionHtml;
 
                             // Store description for later use
                             window.currentTicketDescription = ticket.description || '';
@@ -1237,9 +1190,11 @@ $priorityColors = [
                             displayTicketAttachments(ticket.attachments || []);
 
                             // Populate form fields
+                            console.log('Setting form fields - Ticket ID:', ticket.id, 'Project ID:', projectId);
                             document.getElementById('edit_ticket_id').value = ticket.id;
                             document.getElementById('edit_project_id').value = projectId;
                             document.getElementById('comment_ticket_id').value = ticket.id;
+                            console.log('Form fields set - edit_ticket_id:', document.getElementById('edit_ticket_id').value);
                             document.getElementById('edit_ticket_status_id').value = ticket.ticket_status_id ||
                                 '';
                             document.getElementById('edit_priority').value = ticket.priority || 'medium';
@@ -1304,6 +1259,7 @@ $priorityColors = [
                     const mentionFormats = [
                         '@' + user.name,
                         '@' + user.name.replace(/\s+/g, '')
+                        
                     ];
 
                     mentionFormats.forEach(mentionText => {
@@ -1459,9 +1415,9 @@ $priorityColors = [
                     });
                 }
 
-                // Set current content
+                // Set current content - description is already in HTML format
                 if (currentDescription && currentDescription.trim() !== '') {
-                    descriptionQuill.root.innerHTML = currentDescription.replace(/\n/g, '<br>');
+                    descriptionQuill.root.innerHTML = currentDescription;
                 } else {
                     descriptionQuill.setText('');
                 }
@@ -1478,18 +1434,14 @@ $priorityColors = [
             const projectId = document.getElementById('edit_project_id').value;
             const htmlContent = descriptionQuill.root.innerHTML.trim();
 
-            // Convert HTML to plain text for backend
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = htmlContent;
-            const plainText = tempDiv.innerText || tempDiv.textContent || '';
-
-            updateTicketField(ticketId, projectId, 'description', plainText);
+            console.log('Saving description:', {ticketId, projectId, htmlContent});
+            updateTicketField(ticketId, projectId, 'description', htmlContent);
 
             // Update UI
             setTimeout(() => {
                 document.getElementById('view_ticket_description').innerHTML = htmlContent ||
                     'No description provided';
-                window.currentTicketDescription = plainText;
+                window.currentTicketDescription = htmlContent;
                 cancelDescriptionEdit();
             }, 500);
         };
@@ -1865,12 +1817,16 @@ $priorityColors = [
 
         // Update single ticket field
         function updateTicketField(ticketId, projectId, fieldName, fieldValue) {
+            console.log('updateTicketField called:', {ticketId, projectId, fieldName, fieldValue});
             showNotification('Updating...', 'info');
 
-            fetch(`{{ url('') }}/{{ getSystemPrefix() }}/projects/${projectId}/tickets/${ticketId}/show`, {
+            // Add cache buster
+            const cacheBuster = new Date().getTime();
+            fetch(`{{ url('') }}/{{ getSystemPrefix() }}/projects/${projectId}/tickets/${ticketId}/show?_=${cacheBuster}`, {
                     headers: {
                         'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Cache-Control': 'no-cache'
                     }
                 })
                 .then(response => response.json())
@@ -1882,7 +1838,7 @@ $priorityColors = [
                         formData.append('_method', 'PUT');
                         formData.append('project_id', projectId);
                         formData.append('title', ticket.title);
-                        formData.append('description', ticket.description || '');
+                        formData.append('description', fieldName === 'description' ? fieldValue : (ticket.description || ''));
                         formData.append('ticket_status_id', fieldName === 'ticket_status_id' ? fieldValue : ticket
                             .ticket_status_id);
                         formData.append('priority', fieldName === 'priority' ? fieldValue : ticket.priority);
@@ -1895,21 +1851,35 @@ $priorityColors = [
                             .story_points || ''));
                         formData.append('status', ticket.status);
 
+                        // Debug: Log what we're sending
+                        console.log('FormData being sent for update:', {
+                            fieldName: fieldName,
+                            fieldValue: fieldValue,
+                            description: formData.get('description'),
+                            title: formData.get('title')
+                        });
+
                         return fetch(
                             `{{ url('') }}/{{ getSystemPrefix() }}/projects/${projectId}/tickets/${ticketId}`, {
                                 method: 'POST',
                                 headers: {
                                     'X-CSRF-TOKEN': csrfToken,
-                                    'Accept': 'application/json'
+                                    'Accept': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest'
                                 },
                                 body: formData
                             });
                     }
                 })
                 .then(response => {
-                    if (response && response.redirected) {
+                    console.log('Update response:', response);
+                    if (response && (response.ok || response.redirected)) {
                         showNotification('Updated successfully', 'success');
-                        loadActivities(ticketId, projectId);
+                        // Reload ticket details to show updated data
+                        setTimeout(() => {
+                            loadTicketDetails(ticketId, projectId);
+                            loadActivities(ticketId, projectId);
+                        }, 500);
                         return null;
                     }
                     return response ? response.json() : null;
@@ -1917,7 +1887,10 @@ $priorityColors = [
                 .then(data => {
                     if (data) {
                         showNotification('Updated successfully', 'success');
-                        loadActivities(ticketId, projectId);
+                        setTimeout(() => {
+                            loadTicketDetails(ticketId, projectId);
+                            loadActivities(ticketId, projectId);
+                        }, 500);
                     }
                 })
                 .catch(error => {

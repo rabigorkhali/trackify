@@ -87,6 +87,15 @@ class Service
     public function update($request, $id)
     {
         $data = $request->except('_token');
+        
+        \Log::info('Service update() called', [
+            'model' => get_class($this->model),
+            'id' => $id,
+            'data' => $data,
+            'has_description' => isset($data['description']),
+            'description_value' => $data['description'] ?? 'NOT SET',
+        ]);
+        
         $update = $this->itemByIdentifier($id);
         $imagePath = $update->image ?? null;
         $logoPath = $update->logo ?? null;
@@ -116,7 +125,20 @@ class Service
             }
             $data['thumbnail_image'] = $this->fullImageUploadPath . uploadImage($this->fullImageUploadPath, 'thumbnail_image', true, 1920, null);
         }
+        
+        \Log::info('Before fill and save', [
+            'id' => $id,
+            'description_in_data' => $data['description'] ?? 'NOT SET',
+            'current_description' => $update->description,
+        ]);
+        
         $update->fill($data)->save();
+        
+        \Log::info('After fill and save', [
+            'id' => $id,
+            'saved_description' => $update->description,
+        ]);
+        
         $update = $this->itemByIdentifier($id);
 
         return $update;
