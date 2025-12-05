@@ -65,45 +65,45 @@ return [
         // Notification routes - accessible to all authenticated users
         [
             'url' => '/notifications',
-                        'method' => $getMethod,
-                ],
-                [
+            'method' => $getMethod,
+        ],
+        [
             'url' => '/notifications/recent',
-                        'method' => $getMethod,
-                ],
-                [
+            'method' => $getMethod,
+        ],
+        [
             'url' => '/notifications/unread-count',
-                        'method' => $getMethod,
-                    ],
+            'method' => $getMethod,
+        ],
         [
             'url' => '/notifications/*/mark-read',
             'method' => $postMethod,
         ],
         [
             'url' => '/notifications/mark-all-read',
-                                    'method' => $postMethod,
+            'method' => $postMethod,
         ],
         [
             'url' => '/notifications/*',
-                                'method' => $deleteMethod,
+            'method' => $deleteMethod,
         ],
         [
             'url' => '/notifications/clear-read',
-                                    'method' => $postMethod,
-                                ],
+            'method' => $postMethod,
+        ],
         // Ticket attachment routes - accessible to all authenticated users
         [
             'url' => $projectUrl.'/*/'.str_replace('/', '', $ticketUrl).'/*/upload-attachments',
-                                    'method' => $postMethod,
+            'method' => $postMethod,
         ],
         [
             'url' => $ticketUrl.'/*/upload-attachments',
-                                    'method' => $postMethod,
+            'method' => $postMethod,
         ],
         [
             'url' => '/ticket-attachments/*',
-                                'method' => $deleteMethod,
-                            ],
+            'method' => $deleteMethod,
+        ],
         // Ticket update routes - accessible to all authenticated users
         [
             'url' => '/tickets-update-assignee',
@@ -146,37 +146,37 @@ return [
         [
             'name' => 'Dashboard',
             'icon' => "<i class='fa fa-home'></i>",
-                            'hasSubmodules' => false,
+            'hasSubmodules' => false,
             'route' => $homeBaseUrl,
             'routeIndexName' => 'home.index',
             'routeName' => 'home',
-                            'permissions' => [
-                                [
+            'permissions' => [
+                [
                     'name' => 'View Dashboard',
-                                    'route' => [
+                    'route' => [
                         'url' => $homeBaseUrl,
-                                        'method' => $getMethod,
-                            ],
-                        ],
-                        [
+                        'method' => $getMethod,
+                    ],
+                ],
+                [
                     'name' => 'Backup Database',
-                                    'route' => [
+                    'route' => [
                         'url' => '/backup-database',
-                                        'method' => $getMethod,
-                            ],
-                        ],
-                        [
+                        'method' => $getMethod,
+                    ],
+                ],
+                [
                     'name' => 'Backup Project',
-                                    'route' => [
+                    'route' => [
                         'url' => '/backup-project',
-                                        'method' => $getMethod,
-                            ],
-                        ],
-                        [
+                        'method' => $getMethod,
+                    ],
+                ],
+                [
                     'name' => 'Generate Sitemap',
-                                    'route' => [
+                    'route' => [
                         'url' => '/generate-sitemap',
-                                        'method' => $getMethod,
+                        'method' => $getMethod,
                     ],
                 ],
             ],
@@ -1243,44 +1243,44 @@ return [
                         ],
                     ],
                 ],
+                [
+                    'name' => 'Configs',
+                    'icon' => '<i class="fa fa-cog" aria-hidden="true"></i>',
+                    'route' => $configBaseUrl,
+                    'routeIndexName' => 'configs.index',
+                    'routeName' => 'configs',
+                    'hasSubmodules' => false,
+                    'permissions' => [
                         [
-                            'name' => 'Configs',
-                            'icon' => '<i class="fa fa-cog" aria-hidden="true"></i>',
-                            'route' => $configBaseUrl,
-                            'routeIndexName' => 'configs.index',
-                            'routeName' => 'configs',
-                            'hasSubmodules' => false,
-                            'permissions' => [
-                                [
-                                    'name' => 'View Configs',
-                                    'route' => [
-                                        'url' => $configBaseUrl,
-                                        'method' => $getMethod,
-                                    ],
-                                ],
-                                [
-                                    'name' => 'Create Config',
-                                    'route' => [
-                                        'url' => $configBaseUrl,
-                                        'method' => $postMethod,
-                                    ],
-                                ],
-                                [
-                                    'name' => 'Edit Config',
-                                    'route' => [
-                                'url' => $configBaseUrl.'/*',
-                                        'method' => $putMethod,
-                                    ],
-                                ],
-                                [
-                                    'name' => 'Delete Config',
-                                    'route' => [
-                                'url' => $configBaseUrl.'/*',
-                                        'method' => $deleteMethod,
-                                    ],
-                                ],
+                            'name' => 'View Configs',
+                            'route' => [
+                                'url' => $configBaseUrl,
+                                'method' => $getMethod,
                             ],
                         ],
+                        [
+                            'name' => 'Create Config',
+                            'route' => [
+                                'url' => $configBaseUrl,
+                                'method' => $postMethod,
+                            ],
+                        ],
+                        [
+                            'name' => 'Edit Config',
+                            'route' => [
+                                'url' => $configBaseUrl.'/*',
+                                'method' => $putMethod,
+                            ],
+                        ],
+                        [
+                            'name' => 'Delete Config',
+                            'route' => [
+                                'url' => $configBaseUrl.'/*',
+                                'method' => $deleteMethod,
+                            ],
+                        ],
+                    ],
+                ],
                 // [
                 //     'name' => 'Menu Builder',
                 //     'icon' => '<i class="fa fa-menu" aria-hidden="true"></i>',
@@ -1425,69 +1425,69 @@ return [
                         ],
                     ],
                 ],
-                [
-                    'name' => 'Tickets',
-                    'icon' => "<i class='fa fa-ticket'></i>",
-                    'hasSubmodules' => false,
-                    'route' => $projectUrl.'/*/'.str_replace('/', '', $ticketUrl),
-                    'routeIndexName' => 'tickets.index',
-                    'routeName' => 'tickets',
-                    'permissions' => [
-                        [
-                            'name' => 'View Tickets',
-                            'route' => [
-                                'url' => $projectUrl.'/*/'.str_replace('/', '', $ticketUrl),
-                                'method' => $getMethod,
-                            ],
-                        ],
-                        [
-                            'name' => 'View Ticket Details',
-                            'route' => [
-                                [
-                                    'url' => $projectUrl.'/*/'.str_replace('/', '', $ticketUrl).'/*/show',
-                                    'method' => $getMethod,
-                                ],
-                                [
-                                    'url' => $projectUrl.'/*/'.str_replace('/', '', $ticketUrl).'/*',
-                                    'method' => $getMethod,
-                                ],
-                            ],
-                        ],
-                        [
-                            'name' => 'Create Ticket',
-                            'route' => [
-                                [
-                                    'url' => $projectUrl.'/*/'.str_replace('/', '', $ticketUrl).'/create',
-                                    'method' => $getMethod,
-                                ],
-                                [
-                                    'url' => $projectUrl.'/*/'.str_replace('/', '', $ticketUrl),
-                                    'method' => $postMethod,
-                                ],
-                            ],
-                        ],
-                        [
-                            'name' => 'Edit Ticket',
-                            'route' => [
-                                [
-                                    'url' => $projectUrl.'/*/'.str_replace('/', '', $ticketUrl).'/*/edit',
-                                    'method' => $getMethod,
-                                ],
-                                [
-                                    'url' => $projectUrl.'/*/'.str_replace('/', '', $ticketUrl).'/*',
-                                    'method' => $putMethod,
-                                ],
-                            ],
-                        ],
-                        [
-                            'name' => 'Delete Ticket',
-                            'route' => [
-                                'url' => $projectUrl.'/*/'.str_replace('/', '', $ticketUrl).'/*',
-                                'method' => $deleteMethod,
-                            ],
-                        ],
-                    ],
-                ],
+                // [
+                //     'name' => 'Tickets',
+                //     'icon' => "<i class='fa fa-ticket'></i>",
+                //     'hasSubmodules' => false,
+                //     'route' => $projectUrl.'/*/'.str_replace('/', '', $ticketUrl),
+                //     'routeIndexName' => 'tickets.index',
+                //     'routeName' => 'tickets',
+                //     'permissions' => [
+                //         [
+                //             'name' => 'View Tickets',
+                //             'route' => [
+                //                 'url' => $projectUrl.'/*/'.str_replace('/', '', $ticketUrl),
+                //                 'method' => $getMethod,
+                //             ],
+                //         ],
+                //         [
+                //             'name' => 'View Ticket Details',
+                //             'route' => [
+                //                 [
+                //                     'url' => $projectUrl.'/*/'.str_replace('/', '', $ticketUrl).'/*/show',
+                //                     'method' => $getMethod,
+                //                 ],
+                //                 [
+                //                     'url' => $projectUrl.'/*/'.str_replace('/', '', $ticketUrl).'/*',
+                //                     'method' => $getMethod,
+                //                 ],
+                //             ],
+                //         ],
+                //         [
+                //             'name' => 'Create Ticket',
+                //             'route' => [
+                //                 [
+                //                     'url' => $projectUrl.'/*/'.str_replace('/', '', $ticketUrl).'/create',
+                //                     'method' => $getMethod,
+                //                 ],
+                //                 [
+                //                     'url' => $projectUrl.'/*/'.str_replace('/', '', $ticketUrl),
+                //                     'method' => $postMethod,
+                //                 ],
+                //             ],
+                //         ],
+                //         [
+                //             'name' => 'Edit Ticket',
+                //             'route' => [
+                //                 [
+                //                     'url' => $projectUrl.'/*/'.str_replace('/', '', $ticketUrl).'/*/edit',
+                //                     'method' => $getMethod,
+                //                 ],
+                //                 [
+                //                     'url' => $projectUrl.'/*/'.str_replace('/', '', $ticketUrl).'/*',
+                //                     'method' => $putMethod,
+                //                 ],
+                //             ],
+                //         ],
+                //         [
+                //             'name' => 'Delete Ticket',
+                //             'route' => [
+                //                 'url' => $projectUrl.'/*/'.str_replace('/', '', $ticketUrl).'/*',
+                //                 'method' => $deleteMethod,
+                //             ],
+                //         ],
+                //     ],
+                // ],
                 [
                     'name' => 'Kanban Board',
                     'icon' => "<i class='fa fa-columns'></i>",
@@ -1525,7 +1525,7 @@ return [
                             'route' => [
                                 [
                                     'url' => $ticketStatusUrl.'/create',
-                                'method' => $getMethod,
+                                    'method' => $getMethod,
                                 ],
                                 [
                                     'url' => $ticketStatusUrl,
@@ -1538,7 +1538,7 @@ return [
                             'route' => [
                                 [
                                     'url' => $ticketStatusUrl.'/*/edit',
-                                'method' => $getMethod,
+                                    'method' => $getMethod,
                                 ],
                                 [
                                     'url' => $ticketStatusUrl.'/*',
@@ -1557,62 +1557,62 @@ return [
                             'name' => 'Update Ticket Status Order',
                             'route' => [
                                 'url' => $ticketStatusUrl.'-update-order',
-                                    'method' => $postMethod,
-                                ],
-                            ],
-                        ],
-                ],
-
-                [
-                    'name' => 'Ticket Labels',
-                    'icon' => "<i class='fa fa-tags'></i>",
-                    'hasSubmodules' => false,
-                    'route' => $ticketLabelUrl,
-                    'routeIndexName' => 'ticket-labels.index',
-                    'routeName' => 'ticket-labels',
-                    'permissions' => [
-                        [
-                            'name' => 'View Ticket Labels',
-                            'route' => [
-                                'url' => $ticketLabelUrl,
-                                'method' => $getMethod,
-                            ],
-                        ],
-                                [
-                            'name' => 'Create Ticket Label',
-                            'route' => [
-                                [
-                                    'url' => $ticketLabelUrl.'/create',
-                                    'method' => $getMethod,
-                                ],
-                                [
-                                    'url' => $ticketLabelUrl,
-                                    'method' => $postMethod,
-                                ],
-                            ],
-                        ],
-                        [
-                            'name' => 'Edit Ticket Label',
-                            'route' => [
-                                [
-                                    'url' => $ticketLabelUrl.'/*/edit',
-                                    'method' => $getMethod,
-                                ],
-                                [
-                                    'url' => $ticketLabelUrl.'/*',
-                                    'method' => $putMethod,
-                                ],
-                            ],
-                        ],
-                        [
-                            'name' => 'Delete Ticket Label',
-                            'route' => [
-                                'url' => $ticketLabelUrl.'/*',
-                                'method' => $deleteMethod,
+                                'method' => $postMethod,
                             ],
                         ],
                     ],
                 ],
+
+                // [
+                //     'name' => 'Ticket Labels',
+                //     'icon' => "<i class='fa fa-tags'></i>",
+                //     'hasSubmodules' => false,
+                //     'route' => $ticketLabelUrl,
+                //     'routeIndexName' => 'ticket-labels.index',
+                //     'routeName' => 'ticket-labels',
+                //     'permissions' => [
+                //         [
+                //             'name' => 'View Ticket Labels',
+                //             'route' => [
+                //                 'url' => $ticketLabelUrl,
+                //                 'method' => $getMethod,
+                //             ],
+                //         ],
+                //                 [
+                //             'name' => 'Create Ticket Label',
+                //             'route' => [
+                //                 [
+                //                     'url' => $ticketLabelUrl.'/create',
+                //                     'method' => $getMethod,
+                //                 ],
+                //                 [
+                //                     'url' => $ticketLabelUrl,
+                //                     'method' => $postMethod,
+                //                 ],
+                //             ],
+                //         ],
+                //         [
+                //             'name' => 'Edit Ticket Label',
+                //             'route' => [
+                //                 [
+                //                     'url' => $ticketLabelUrl.'/*/edit',
+                //                     'method' => $getMethod,
+                //                 ],
+                //                 [
+                //                     'url' => $ticketLabelUrl.'/*',
+                //                     'method' => $putMethod,
+                //                 ],
+                //             ],
+                //         ],
+                //         [
+                //             'name' => 'Delete Ticket Label',
+                //             'route' => [
+                //                 'url' => $ticketLabelUrl.'/*',
+                //                 'method' => $deleteMethod,
+                //             ],
+                //         ],
+                //     ],
+                // ],
             ],
         ],
     ],
