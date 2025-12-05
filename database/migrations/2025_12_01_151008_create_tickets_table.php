@@ -20,7 +20,7 @@ return new class extends Migration {
             $table->string('priority')->default('medium'); // low, medium, high, critical
             $table->string('type')->default('task'); // bug, task, story, epic
             $table->unsignedBigInteger('assignee_id')->nullable();
-            $table->unsignedBigInteger('reporter_id');
+            $table->unsignedBigInteger('reporter_id')->nullable();
             $table->date('due_date')->nullable();
             $table->integer('story_points')->nullable();
             $table->integer('status')->default(1);
