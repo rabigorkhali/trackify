@@ -23,7 +23,7 @@
             @if(hasPermission('/kanban', 'get'))
                 <li class="nav-item me-2 me-xl-0">
                     <a class="nav-link" href="{{ route('kanban.index') }}" title="Global Kanban">
-                        <i class="ti ti-layout-kanban ti-md"></i>
+                        <i class="ti ti-layout-kanban ti-md"></i> Kanban
                     </a>
                 </li>
             @endif
