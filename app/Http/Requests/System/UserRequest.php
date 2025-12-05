@@ -25,13 +25,13 @@ class UserRequest extends FormRequest
     {
         $validation = [
             'name' => 'required|string|max:255|min:3',
-            'email' => 'required|email|max:255|unique:users,email,' . $this->id,
+            'email' => 'required|email|max:255|unique:users,email,'.$this->id,
             'password' => 'required|nullable|string|min:8|confirmed',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
             'mobile_number' => 'nullable|string|max:15|min:10',
             'date_of_birth' => 'nullable|date|before:today',
             'gender' => 'nullable|string|in:male,female,other',
-            'country' => 'nullable|string|in:nepal,india',
+            'country' => 'nullable|string|max:100',
             'address' => 'nullable|string|max:255',
             'role_id' => 'required|exists:roles,id',
         ];
@@ -42,11 +42,11 @@ class UserRequest extends FormRequest
         if ($this->method() == 'PUT') {
             $validation['password'] = 'nullable|string|min:8|confirmed';
         }
+
         return $validation;
     }
 
-    public
-    function messages()
+    public function messages()
     {
         return [
             'role_id.exists' => 'The selected role is invalid.',
@@ -58,8 +58,7 @@ class UserRequest extends FormRequest
      *
      * @return array
      */
-    public
-    function attributes()
+    public function attributes()
     {
         return [
             'role_id' => 'role',
