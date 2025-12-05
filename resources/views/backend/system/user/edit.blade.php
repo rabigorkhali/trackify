@@ -31,8 +31,9 @@
                         <label class="form-label" for="country">{{ 'Country' }}</label>
                         <select  name="country" class="form-control  @if ($errors->first('country')) is-invalid @endif">
                             <option value="">{{__('None')}}</option>
-                            <option @if($thisData->country??old('country')=='nepal') selected @endif value="nepal">{{__('Nepal')}}</option>
-                            <option @if($thisData->country??old('country')=='india') selected @endif value="india">{{__('India')}}</option>
+                            @foreach(config('countries') as $countryCode => $countryName)
+                                <option @if(($thisData->country??old('country'))==$countryCode) selected @endif value="{{ $countryCode }}">{{ $countryName }}</option>
+                            @endforeach
                         </select>
 
                         <div class="invalid-feedback">{{ $errors->first('country') }}</div>
