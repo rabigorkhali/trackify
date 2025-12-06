@@ -240,7 +240,37 @@ class TicketController extends ResourceController
         $request->merge(['project_id' => $projectId]);
         
         try {
+            // Get ticket before update to check for changes
+            $ticket = \App\Models\Ticket::findOrFail($ticketId);
+            $oldAssigneeId = $ticket->assignee_id;
+            $oldStatusId = $ticket->ticket_status_id;
+
             $updatedTicket = $this->service->update($request, $ticketId);
+
+            // Reload ticket with relationships
+            $updatedTicket->refresh();
+            $updatedTicket->load(['project', 'ticketStatus', 'assignee']);
+
+            // Check if assignee changed and send email notification
+            if ($updatedTicket->assignee_id != $oldAssigneeId) {
+                if ($updatedTicket->assignee_id && $updatedTicket->assignee_id != auth()->id()) {
+                    $this->notificationService->notifyTicketAssignment($updatedTicket, auth()->id());
+                }
+            }
+
+            // Check if status changed and send email notification
+            if ($updatedTicket->ticket_status_id != $oldStatusId) {
+                $oldStatus = \App\Models\TicketStatus::find($oldStatusId);
+                $newStatus = $updatedTicket->ticketStatus;
+                if ($oldStatus && $newStatus) {
+                    $this->notificationService->notifyStatusChange(
+                        $updatedTicket,
+                        $oldStatus->name,
+                        $newStatus->name,
+                        auth()->id()
+                    );
+                }
+            }
 
             // Return JSON for AJAX requests
             if ($request->wantsJson() || $request->ajax()) {
