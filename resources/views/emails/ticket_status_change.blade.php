@@ -79,7 +79,7 @@
                 <p><strong>Priority:</strong> {{ ucfirst($ticket->priority) }}</p>
             </div>
             
-            <a href="{{ config('app.url') }}/{{ getSystemPrefix() }}/projects/{{ $ticket->project_id }}/tickets/{{ $ticket->id }}/show" class="button">
+            <a href="{{ rtrim(config('app.url'), '/') }}/{{ getSystemPrefix() }}/projects/{{ $ticket->project_id }}/tickets/{{ $ticket->id }}/show" class="button">
                 View Ticket
             </a>
             
