@@ -40,9 +40,6 @@ class TicketCommentController extends Controller
             // Send notification to assignee and watchers about new comment
             $this->notificationService->notifyNewComment($ticket, $comment->comment, auth()->id());
             
-            // Check for mentions in comment
-            $this->notificationService->notifyMentions($comment->comment, $ticket, 'comment');
-            
             // Handle mentions - send notifications and emails
             if ($request->has('mentioned_users')) {
                 $mentionedUserIds = json_decode($request->mentioned_users, true);
@@ -51,32 +48,32 @@ class TicketCommentController extends Controller
                     
                     foreach ($mentionedUserIds as $userId) {
                         $mentionedUser = \App\Models\User::find($userId);
-                        if ($mentionedUser) {
-                            // Create notification
+                        if ($mentionedUser && $mentionedUser->email) {
+                            // Create notification (this will also send email via NotificationService)
+                            $this->notificationService->create(
+                                $mentionedUser->id,
+                                \App\Models\Notification::TYPE_COMMENT_MENTION,
+                                'You were mentioned',
+                                "You were mentioned in a comment on ticket: {$ticket->title}",
+                                $ticket->id,
+                                $ticket->project_id,
+                                auth()->id(),
+                                ['comment' => $comment->comment]
+                            );
+                            
+                            // Log activity
                             \App\Models\TicketActivity::create([
                                 'ticket_id' => $ticket->id,
                                 'user_id' => auth()->id(),
                                 'action' => 'user_mentioned',
                                 'description' => "mentioned {$mentionedUser->name} in a comment",
                             ]);
-                            
-                            // Send email notification
-                            try {
-                                \Illuminate\Support\Facades\Mail::send('emails.ticket_mention', [
-                                    'user' => $mentionedUser,
-                                    'commenter' => $commenter,
-                                    'ticket' => $ticket,
-                                    'comment' => $comment,
-                                ], function ($message) use ($mentionedUser, $ticket) {
-                                    $message->to($mentionedUser->email)
-                                            ->subject("You were mentioned in ticket {$ticket->ticket_key}");
-                                });
-                            } catch (\Exception $e) {
-                                \Log::error('Failed to send mention email: ' . $e->getMessage());
-                            }
                         }
                     }
                 }
+            } else {
+                // Also check for mentions in comment text (fallback)
+                $this->notificationService->notifyMentions($comment->comment, $ticket, 'comment');
             }
             
             // Return JSON for AJAX requests

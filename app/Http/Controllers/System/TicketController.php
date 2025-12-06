@@ -59,14 +59,6 @@ class TicketController extends ResourceController
         $ticketId = $ticket;
         $this->setModuleId($projectId);
 
-        // Debug logging
-        \Log::info('TicketController show() called', [
-            'ticket_param' => $ticketId,
-            'project_param' => $projectId,
-            'route_params' => request()->route()->parameters(),
-            'url' => request()->fullUrl(),
-        ]);
-
         try {
             $data = $this->service->showPageData($request, $ticketId);
             $data['project'] = \App\Models\Project::findOrFail($projectId);
@@ -187,7 +179,16 @@ class TicketController extends ResourceController
         $this->setModuleId($projectId);
         $request->merge(['project_id' => $projectId]);
         try {
-            $this->service->store($request);
+            $ticket = $this->service->store($request);
+
+            // Reload ticket with relationships for email notification
+            $ticket->refresh();
+            $ticket->load(['project', 'ticketStatus', 'assignee']);
+
+            // Send notification if ticket has an assignee
+            if ($ticket->assignee_id && $ticket->assignee_id != auth()->id()) {
+                $this->notificationService->notifyTicketAssignment($ticket, auth()->id());
+            }
 
             return redirect($this->getUrl())->withErrors(['success' => 'Successfully created.']);
         } catch (\Throwable $th) {
@@ -222,14 +223,6 @@ class TicketController extends ResourceController
      */
     public function update($id)
     {
-        \Log::info('TicketController update() - RAW PARAMETERS', [
-            'id_param' => $id,
-            'route_ticket' => request()->route('ticket'),
-            'route_project' => request()->route('project'),
-            'all_route_params' => request()->route()->parameters(),
-            'url' => request()->fullUrl(),
-        ]);
-        
         // Get the correct ticket ID from route parameter
         $ticketId = request()->route('ticket') ?? $id;
         
@@ -246,22 +239,8 @@ class TicketController extends ResourceController
         $this->setModuleId($projectId);
         $request->merge(['project_id' => $projectId]);
         
-        \Log::info('TicketController update() called', [
-            'ticket_id' => $ticketId,
-            'project_id' => $projectId,
-            'request_data' => $request->except(['_token', '_method']),
-            'description' => $request->description,
-            'is_ajax' => $request->ajax(),
-            'wants_json' => $request->wantsJson(),
-        ]);
-        
         try {
             $updatedTicket = $this->service->update($request, $ticketId);
-            
-            \Log::info('Ticket updated successfully', [
-                'ticket_id' => $ticketId,
-                'updated_description' => $updatedTicket->description,
-            ]);
 
             // Return JSON for AJAX requests
             if ($request->wantsJson() || $request->ajax()) {
@@ -353,8 +332,13 @@ class TicketController extends ResourceController
 
             $ticket = \App\Models\Ticket::findOrFail($request->ticket_id);
             $oldAssignee = $ticket->assignee;
+            $oldAssigneeId = $ticket->assignee_id;
             $ticket->assignee_id = $request->assignee_id;
             $ticket->save();
+
+            // Reload ticket with relationships for email notification
+            $ticket->refresh();
+            $ticket->load(['project', 'ticketStatus', 'assignee']);
 
             // Log activity
             $newAssignee = $request->assignee_id ? \App\Models\User::find($request->assignee_id) : null;
@@ -366,12 +350,14 @@ class TicketController extends ResourceController
                 'user_id' => auth()->id(),
                 'action' => 'assignee_changed',
                 'description' => 'Changed assignee from "'.$oldAssigneeName.'" to "'.$newAssigneeName.'"',
-                'old_value' => ['assignee_id' => $oldAssignee?->id, 'assignee_name' => $oldAssigneeName],
+                'old_value' => ['assignee_id' => $oldAssigneeId, 'assignee_name' => $oldAssigneeName],
                 'new_value' => ['assignee_id' => $ticket->assignee_id, 'assignee_name' => $newAssigneeName],
             ]);
 
-            // Send notification
-            $this->notificationService->notifyTicketAssignment($ticket, auth()->id());
+            // Send email notification to new assignee (if assigned and different from old assignee and current user)
+            if ($ticket->assignee_id && $ticket->assignee_id != auth()->id()) {
+                $this->notificationService->notifyTicketAssignment($ticket, auth()->id());
+            }
 
             return response()->json([
                 'success' => true,
