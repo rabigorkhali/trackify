@@ -13,6 +13,22 @@ class LogRouteAccess
 {
     public function handle(Request $request, Closure $next)
     {
+        // Skip logging for specific routes
+        $excludedRoutes = [
+            'notifications/unread-count',
+        ];
+        
+        $path = $request->path();
+        $shouldLog = true;
+        
+        foreach ($excludedRoutes as $excludedRoute) {
+            if (str_contains($path, $excludedRoute)) {
+                $shouldLog = false;
+                break;
+            }
+        }
+        
+        if ($shouldLog) {
 //        if (Auth::check()) {
             $response=activity()
                 ->causedBy(Auth::user())
@@ -24,6 +40,7 @@ class LogRouteAccess
                 ])
                 ->log('User accessed ' . $request->path());
 //        }
+        }
 
         return $next($request);
     }
