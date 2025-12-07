@@ -113,6 +113,23 @@ return [
             'url' => '/tickets-update-status',
             'method' => $postMethod,
         ],
+        // Ticket view routes - accessible to all authenticated users
+        [
+            'url' => '/projects/*/tickets/*/show',
+            'method' => $getMethod,
+        ],
+        [
+            'url' => '/projects/*/tickets/*',
+            'method' => $postMethod,
+        ],
+        [
+            'url' => '/projects/*/tickets/*',
+            'method' => $putMethod,
+        ],
+        [
+            'url' => '/projects/*/tickets/*',
+            'method' => 'patch',
+        ],
         // Ticket comment routes - accessible to all authenticated users
         [
             'url' => '/ticket-comments',
