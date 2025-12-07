@@ -42,12 +42,22 @@ class NotificationService
         try {
             $user = $notification->user;
             if (!$user || !$user->email) {
+                \Log::warning('Cannot send email: User or email missing', [
+                    'notification_id' => $notification->id,
+                    'user_id' => $notification->user_id,
+                    'has_user' => $user ? true : false,
+                    'has_email' => $user && $user->email ? true : false,
+                ]);
                 return;
             }
 
             // Load ticket with necessary relationships
             $ticket = Ticket::with(['project', 'ticketStatus'])->find($notification->ticket_id);
             if (!$ticket) {
+                \Log::warning('Cannot send email: Ticket not found', [
+                    'notification_id' => $notification->id,
+                    'ticket_id' => $notification->ticket_id,
+                ]);
                 return;
             }
 
@@ -56,6 +66,10 @@ class NotificationService
                 // If triggeredBy is not set, try to get it from the notification
                 $triggeredBy = User::find($notification->triggered_by);
                 if (!$triggeredBy) {
+                    \Log::warning('Cannot send email: TriggeredBy user not found', [
+                        'notification_id' => $notification->id,
+                        'triggered_by' => $notification->triggered_by,
+                    ]);
                     return;
                 }
             }
@@ -64,11 +78,40 @@ class NotificationService
                 case Notification::TYPE_ASSIGNMENT:
                     if ($ticket && $user && $triggeredBy) {
                         try {
+                            \Log::info('Attempting to send assignment email', [
+                                'ticket_id' => $ticket->id,
+                                'ticket_key' => $ticket->ticket_key,
+                                'user_email' => $user->email,
+                                'user_name' => $user->name,
+                                'assigned_by' => $triggeredBy->name,
+                                'mail_driver' => config('mail.default'),
+                            ]);
+                            
                             // Send email synchronously (not queued)
                             Mail::to($user->email)->send(new TicketAssignmentMail($ticket, $user, $triggeredBy));
+                            
+                            \Log::info('Assignment email sent successfully', [
+                                'ticket_id' => $ticket->id,
+                                'user_email' => $user->email,
+                            ]);
                         } catch (\Exception $e) {
+                            // Log error for debugging
+                            \Log::error('Failed to send assignment email', [
+                                'ticket_id' => $ticket->id,
+                                'user_email' => $user->email,
+                                'error' => $e->getMessage(),
+                                'error_file' => $e->getFile(),
+                                'error_line' => $e->getLine(),
+                                'trace' => $e->getTraceAsString(),
+                            ]);
                             // Don't re-throw - we don't want email failures to break the assignment
                         }
+                    } else {
+                        \Log::warning('Cannot send assignment email - missing data', [
+                            'has_ticket' => $ticket ? true : false,
+                            'has_user' => $user ? true : false,
+                            'has_triggeredBy' => $triggeredBy ? true : false,
+                        ]);
                     }
                     break;
 
@@ -116,7 +159,16 @@ class NotificationService
                     break;
             }
         } catch (\Exception $e) {
-            // Silently fail - don't break the notification process
+            // Log error for debugging
+            \Log::error('Failed to send email notification', [
+                'notification_id' => $notification->id,
+                'type' => $notification->type,
+                'user_id' => $notification->user_id,
+                'ticket_id' => $notification->ticket_id,
+                'error' => $e->getMessage(),
+                'error_file' => $e->getFile(),
+                'error_line' => $e->getLine(),
+            ]);
         }
     }
 
@@ -125,7 +177,7 @@ class NotificationService
      */
     public function notifyTicketAssignment(Ticket $ticket, $assignedBy)
     {
-        if ($ticket->assignee_id && $ticket->assignee_id != $assignedBy) {
+        if ($ticket->assignee_id) {
             $assignee = User::find($ticket->assignee_id);
 
             if ($assignee && $assignee->email) {
@@ -137,6 +189,14 @@ class NotificationService
                     $ticket->load('ticketStatus');
                 }
 
+                \Log::info('NotificationService: Creating assignment notification', [
+                    'ticket_id' => $ticket->id,
+                    'assignee_id' => $assignee->id,
+                    'assignee_email' => $assignee->email,
+                    'assigned_by' => $assignedBy,
+                    'is_self_assignment' => ($ticket->assignee_id == $assignedBy),
+                ]);
+
                 $this->create(
                     $ticket->assignee_id,
                     Notification::TYPE_ASSIGNMENT,
@@ -146,7 +206,18 @@ class NotificationService
                     $ticket->project_id,
                     $assignedBy
                 );
+            } else {
+                \Log::warning('NotificationService: Cannot send assignment email - no assignee or email', [
+                    'ticket_id' => $ticket->id,
+                    'assignee_id' => $ticket->assignee_id,
+                    'assignee_exists' => $assignee ? true : false,
+                    'has_email' => $assignee && $assignee->email ? true : false,
+                ]);
             }
+        } else {
+            \Log::warning('NotificationService: Cannot send assignment email - no assignee_id', [
+                'ticket_id' => $ticket->id,
+            ]);
         }
     }
 

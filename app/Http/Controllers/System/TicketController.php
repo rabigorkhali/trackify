@@ -384,9 +384,30 @@ class TicketController extends ResourceController
                 'new_value' => ['assignee_id' => $ticket->assignee_id, 'assignee_name' => $newAssigneeName],
             ]);
 
-            // Send email notification to new assignee (if assigned and different from old assignee and current user)
-            if ($ticket->assignee_id && $ticket->assignee_id != auth()->id()) {
+            // Send email notification to new assignee if:
+            // 1. There is a new assignee (assignee_id is set and not null)
+            // 2. The assignee actually changed (old != new, or was null before)
+            $newAssigneeId = $ticket->assignee_id;
+            $hasNewAssignee = !empty($newAssigneeId);
+            $assigneeChanged = ($oldAssigneeId != $newAssigneeId);
+            
+            if ($hasNewAssignee && $assigneeChanged) {
+                \Log::info('TicketController: Sending assignment email notification', [
+                    'ticket_id' => $ticket->id,
+                    'old_assignee_id' => $oldAssigneeId,
+                    'new_assignee_id' => $newAssigneeId,
+                    'assigned_by' => auth()->id(),
+                    'is_self_assignment' => ($newAssigneeId == auth()->id()),
+                ]);
                 $this->notificationService->notifyTicketAssignment($ticket, auth()->id());
+            } else {
+                \Log::info('TicketController: Skipping assignment email notification', [
+                    'ticket_id' => $ticket->id,
+                    'old_assignee_id' => $oldAssigneeId,
+                    'new_assignee_id' => $newAssigneeId,
+                    'has_new_assignee' => $hasNewAssignee,
+                    'assignee_changed' => $assigneeChanged,
+                ]);
             }
 
             return response()->json([
