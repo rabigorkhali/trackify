@@ -6,6 +6,14 @@ use App\Models\Course;
 use App\Models\Page;
 use App\Models\Post;
 use App\Models\Service;
+use App\Models\Project;
+use App\Models\Ticket;
+use App\Models\TicketStatus;
+use App\Models\User;
+use App\Models\Event;
+use App\Models\Testimonial;
+use App\Models\Team;
+use App\Models\ContactUs;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\URL;
@@ -35,7 +43,87 @@ class HomeController extends Controller
      */
     public function index()
     {
-        return view('backend.system.dashboard');
+        // Project Statistics
+        $totalProjects = Project::count();
+        $activeProjects = Project::where('status', 1)->count();
+        $recentProjects = Project::latest()->take(5)->get();
+        
+        // Ticket Statistics
+        $totalTickets = Ticket::count();
+        $ticketsByStatusData = Ticket::select('ticket_status_id', DB::raw('count(*) as count'))
+            ->groupBy('ticket_status_id')
+            ->get();
+        
+        $ticketsByStatus = [];
+        foreach ($ticketsByStatusData as $item) {
+            $status = TicketStatus::find($item->ticket_status_id);
+            if ($status) {
+                $ticketsByStatus[$status->name] = $item->count;
+            }
+        }
+        
+        $ticketsByPriority = Ticket::select('priority', DB::raw('count(*) as count'))
+            ->groupBy('priority')
+            ->get()
+            ->pluck('count', 'priority')
+            ->toArray();
+        
+        $ticketsByType = Ticket::select('type', DB::raw('count(*) as count'))
+            ->groupBy('type')
+            ->get()
+            ->pluck('count', 'type')
+            ->toArray();
+        
+        $recentTickets = Ticket::with(['project', 'assignee', 'ticketStatus'])
+            ->latest()
+            ->take(5)
+            ->get();
+        
+        // User Statistics
+        $totalUsers = User::count();
+        $activeUsers = User::where('status', 1)->count();
+        
+        // Content Statistics
+        $totalPosts = Post::count();
+        $totalPages = Page::count();
+        $totalEvents = Event::count();
+        $totalTestimonials = Testimonial::count();
+        $totalTeams = Team::count();
+        $totalContactUs = ContactUs::count();
+        
+        // Ticket trends (last 7 days)
+        $ticketTrends = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i)->format('Y-m-d');
+            $ticketTrends[$date] = Ticket::whereDate('created_at', $date)->count();
+        }
+        
+        // Projects with ticket counts
+        $projectsWithStats = Project::withCount('tickets')
+            ->orderBy('tickets_count', 'desc')
+            ->take(10)
+            ->get();
+        
+        return view('backend.system.dashboard', compact(
+            'totalProjects',
+            'activeProjects',
+            'recentProjects',
+            'totalTickets',
+            'ticketsByStatus',
+            'ticketsByPriority',
+            'ticketsByType',
+            'recentTickets',
+            'totalUsers',
+            'activeUsers',
+            'totalPosts',
+            'totalPages',
+            'totalEvents',
+            'totalTestimonials',
+            'totalTeams',
+            'totalContactUs',
+            'ticketTrends',
+            'projectsWithStats'
+        ));
     }
 
     public function generateSitemap()

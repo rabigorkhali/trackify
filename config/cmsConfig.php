@@ -152,6 +152,10 @@ return [
             'url' => '/ticket-checklists/*',
             'method' => $deleteMethod,
         ],
+        [
+            'url' => '/login',
+            'method' => $getMethod,
+        ],
     ],
 
     // All the routes are accessible by super user by default
