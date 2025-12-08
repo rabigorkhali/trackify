@@ -1296,6 +1296,27 @@ return [
                                 'method' => $deleteMethod,
                             ],
                         ],
+                        [
+                            'name' => 'Generate Sitemap',
+                            'route' => [
+                                'url' => '/generate-sitemap',
+                                'method' => $getMethod,
+                            ],
+                        ],
+                        [
+                            'name' => 'Download Database Backup',
+                            'route' => [
+                                'url' => '/backup-database',
+                                'method' => $getMethod,
+                            ],
+                        ],
+                        [
+                            'name' => 'Download Project Backup',
+                            'route' => [
+                                'url' => '/backup-project',
+                                'method' => $getMethod,
+                            ],
+                        ],
                     ],
                 ],
                 // [
