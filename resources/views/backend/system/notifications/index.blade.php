@@ -78,7 +78,9 @@
 
                     <!-- Pagination -->
                     <div class="p-4">
-                        {{ $notifications->links() }}
+                        <nav aria-label="Notifications pagination">
+                            {{ $notifications->links('pagination::bootstrap-4') }}
+                        </nav>
                     </div>
                 @else
                     <div class="text-center py-5">

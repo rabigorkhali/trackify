@@ -16,7 +16,7 @@ class NotificationController extends Controller
         $notifications = Notification::where('user_id', auth()->id())
             ->with(['ticket', 'project', 'triggeredBy'])
             ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->paginate(50);
 
         return view('backend.system.notifications.index', compact('notifications'));
     }
