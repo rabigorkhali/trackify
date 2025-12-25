@@ -90,26 +90,6 @@
                         <div class="invalid-feedback">{{ $errors->first('role_id') }}</div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label w-100" for="status">{{ __('Is user verified?') }}</label>
-                        <div class="form-check-inline">
-                            <input type="radio" id="is_user_verified_by_donatepur1" name="is_user_verified_by_donatepur"
-                                value="1" checked
-                                class="form-check-input @if ($errors->first('is_user_verified_by_donatepur')) is-invalid @endif"
-                                @if (old('is_user_verified_by_donatepur') == '1') checked @endif>
-                            <label for="is_user_verified_by_donatepur1"
-                                class="form-check-label">{{ __('Yes') }}</label>
-                        </div>
-                        <div class="form-check-inline">
-                            <input type="radio" id="is_user_verified_by_donatepur0" name="is_user_verified_by_donatepur"
-                                value="0"
-                                class="form-check-input @if ($errors->first('is_user_verified_by_donatepur')) is-invalid @endif"
-                                @if (old('is_user_verified_by_donatepur') == '0') checked @endif>
-                            <label for="is_user_verified_by_donatepur0"
-                                class="form-check-label">{{ __('No') }}</label>
-                        </div>
-                        <div class="invalid-feedback">{{ $errors->first('is_user_verified_by_donatepur') }}</div>
-                    </div>
-                    <div class="col-md-6">
                         <label class="form-label w-100" for="status">{{ __('Status') }}</label>
                         <div class="form-check-inline">
                             <input type="radio" id="status1" name="status" value="1" checked

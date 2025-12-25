@@ -18,7 +18,7 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-       'name', 'email', 'role_id', 'email_verified_at', 'password', 'image', 'mobile_number', 'mobile_number_secondary', 'phone_number', 'date_of_birth', 'gender', 'address', 'country', 'email_verify_token', 'remember_token', 'status', 'is_user_verified_by_donatepur'
+       'name', 'email', 'role_id', 'email_verified_at', 'password', 'image', 'mobile_number', 'mobile_number_secondary', 'phone_number', 'date_of_birth', 'gender', 'address', 'country', 'email_verify_token', 'remember_token', 'status'
     ];
 
     /**
