@@ -85,12 +85,23 @@ class TicketAttachmentController extends Controller
             if ($attachment->file_path) {
                 $fullPath = public_path($attachment->file_path);
                 if (file_exists($fullPath)) {
-                    unlink($fullPath);
-                    \Log::info('Deleted attachment file: ' . $attachment->file_path);
+                    // Check if file is writable, if not try to change permissions
+                    if (!is_writable($fullPath)) {
+                        // Try to make the file writable
+                        @chmod($fullPath, 0666);
+                    }
+                    
+                    // Try to delete the file
+                    if (@unlink($fullPath)) {
+                        \Log::info('Deleted attachment file: ' . $attachment->file_path);
+                    } else {
+                        // Log warning but continue - file might be deleted by another process or permission issue
+                        \Log::warning('Could not delete attachment file (permission denied or already deleted): ' . $attachment->file_path);
+                    }
                 }
             }
 
-            // Delete record
+            // Delete record (always delete DB record even if file deletion failed)
             $attachment->delete();
 
             return response()->json([

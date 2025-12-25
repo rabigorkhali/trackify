@@ -30,7 +30,13 @@ class ProfileService extends Service
         $logoPath = $update->logo ?? null;
         if ($request->hasFile('image')) {
             if ($imagePath && file_exists(public_path($imagePath))) {
-                unlink(public_path($imagePath));
+                $fullPath = public_path($imagePath);
+                // Check if file is writable, if not try to change permissions
+                if (!is_writable($fullPath)) {
+                    @chmod($fullPath, 0666);
+                }
+                // Try to delete the file, suppress errors if permission denied
+                @unlink($fullPath);
             }
             $file = $request->file('image');
             $filename = time() . '.' . $file->getClientOriginalExtension();
