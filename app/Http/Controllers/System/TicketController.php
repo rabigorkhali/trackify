@@ -321,6 +321,12 @@ class TicketController extends ResourceController
 
             $ticket = \App\Models\Ticket::findOrFail($request->ticket_id);
             $oldStatus = $ticket->ticketStatus;
+            $oldStatusName = $oldStatus ? $oldStatus->name : 'Unknown';
+            
+            // Get the new status before updating to ensure we have the correct data
+            $newStatus = \App\Models\TicketStatus::findOrFail($request->status_id);
+            $newStatusName = $newStatus->name;
+            
             $ticket->ticket_status_id = $request->status_id;
             $ticket->save();
 
@@ -329,13 +335,13 @@ class TicketController extends ResourceController
                 'ticket_id' => $ticket->id,
                 'user_id' => auth()->id(),
                 'action' => 'status_changed',
-                'description' => 'Changed status from "'.$oldStatus->name.'" to "'.$ticket->ticketStatus->name.'"',
-                'old_value' => ['status_id' => $oldStatus->id, 'status_name' => $oldStatus->name],
-                'new_value' => ['status_id' => $ticket->ticket_status_id, 'status_name' => $ticket->ticketStatus->name],
+                'description' => 'Changed status from "'.$oldStatusName.'" to "'.$newStatusName.'"',
+                'old_value' => ['status_id' => $oldStatus->id, 'status_name' => $oldStatusName],
+                'new_value' => ['status_id' => $ticket->ticket_status_id, 'status_name' => $newStatusName],
             ]);
 
-            // Send notification
-            $this->notificationService->notifyStatusChange($ticket, $oldStatus->name, $ticket->ticketStatus->name, auth()->id());
+            // Send notification - use the explicitly fetched new status name
+            $this->notificationService->notifyStatusChange($ticket, $oldStatusName, $newStatusName, auth()->id());
 
             return response()->json([
                 'success' => true,
