@@ -123,6 +123,10 @@ return [
             'method' => $postMethod,
         ],
         [
+            'url' => '/projects/*/tickets',
+            'method' => $postMethod,
+        ],
+        [
             'url' => '/projects/*/tickets/*',
             'method' => $putMethod,
         ],
