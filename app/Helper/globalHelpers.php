@@ -230,18 +230,27 @@ function uploadImage($dir, $inputName, $resize = false, $width = null, $height =
     $originalPath = $directory . '/' . $fileName;
     move_uploaded_file($file['tmp_name'], $originalPath);
 
-    // Resize image if needed
-    if ($resize || $width || $height) {
-        resizeImage($originalPath, $originalPath, $width, $height);
+    // Check if GD extension is available before attempting image processing
+    if (extension_loaded('gd') && function_exists('imagecreatefromjpeg')) {
+        // Resize image if needed
+        try {
+            if ($resize || $width || $height) {
+                resizeImage($originalPath, $originalPath, $width, $height);
+            }
+
+            // Create medium thumbnail
+            $thumbnailPath = $directory . '/' . $fileThumbnail;
+            resizeImage($originalPath, $thumbnailPath, 400, null);
+
+            // Create small thumbnail
+            $smallPath = $directory . '/' . $fileSmall;
+            resizeImage($originalPath, $smallPath, 70, null);
+        } catch (Exception $e) {
+            // If image processing fails, continue with the original file
+            // The file has already been uploaded successfully
+        }
     }
-
-    // Create medium thumbnail
-    $thumbnailPath = $directory . '/' . $fileThumbnail;
-    resizeImage($originalPath, $thumbnailPath, 400, null);
-
-    // Create small thumbnail
-    $smallPath = $directory . '/' . $fileSmall;
-    resizeImage($originalPath, $smallPath, 70, null);
+    // If GD extension is not available, the original file is saved without processing
 
     // Return the original filename
     return $fileName;
@@ -249,6 +258,11 @@ function uploadImage($dir, $inputName, $resize = false, $width = null, $height =
 
 function resizeImage($sourcePath, $destinationPath, $targetWidth = null, $targetHeight = null)
 {
+    // Check if GD extension is loaded
+    if (!extension_loaded('gd')) {
+        throw new Exception('PHP GD extension is not installed or enabled. Please install php-gd extension to enable image processing.');
+    }
+    
     list($originalWidth, $originalHeight, $imageType) = getimagesize($sourcePath);
     $image = createImageFromType($sourcePath, $imageType);
 
@@ -297,12 +311,26 @@ function resizeImage($sourcePath, $destinationPath, $targetWidth = null, $target
 
 function createImageFromType($filePath, $imageType)
 {
+    // Check if GD extension is loaded
+    if (!extension_loaded('gd')) {
+        throw new Exception('PHP GD extension is not installed or enabled. Please install php-gd extension to enable image processing.');
+    }
+    
     switch ($imageType) {
         case IMAGETYPE_JPEG:
+            if (!function_exists('imagecreatefromjpeg')) {
+                throw new Exception('imagecreatefromjpeg() function is not available. Please ensure GD extension with JPEG support is installed.');
+            }
             return imagecreatefromjpeg($filePath);
         case IMAGETYPE_PNG:
+            if (!function_exists('imagecreatefrompng')) {
+                throw new Exception('imagecreatefrompng() function is not available. Please ensure GD extension with PNG support is installed.');
+            }
             return imagecreatefrompng($filePath);
         case IMAGETYPE_GIF:
+            if (!function_exists('imagecreatefromgif')) {
+                throw new Exception('imagecreatefromgif() function is not available. Please ensure GD extension with GIF support is installed.');
+            }
             return imagecreatefromgif($filePath);
         default:
             throw new Exception('Unsupported image type');
@@ -311,14 +339,28 @@ function createImageFromType($filePath, $imageType)
 
 function saveImageFromType($image, $filePath, $imageType)
 {
+    // Check if GD extension is loaded
+    if (!extension_loaded('gd')) {
+        throw new Exception('PHP GD extension is not installed or enabled. Please install php-gd extension to enable image processing.');
+    }
+    
     switch ($imageType) {
         case IMAGETYPE_JPEG:
+            if (!function_exists('imagejpeg')) {
+                throw new Exception('imagejpeg() function is not available. Please ensure GD extension with JPEG support is installed.');
+            }
             imagejpeg($image, $filePath, 100);
             break;
         case IMAGETYPE_PNG:
+            if (!function_exists('imagepng')) {
+                throw new Exception('imagepng() function is not available. Please ensure GD extension with PNG support is installed.');
+            }
             imagepng($image, $filePath);
             break;
         case IMAGETYPE_GIF:
+            if (!function_exists('imagegif')) {
+                throw new Exception('imagegif() function is not available. Please ensure GD extension with GIF support is installed.');
+            }
             imagegif($image, $filePath);
             break;
         default:
