@@ -52,6 +52,7 @@ Route::prefix(getSystemPrefix())->middleware(['auth', 'permission.routes', 'log'
     Route::resource('/users', UserController::class);
     Route::resource('/roles', RoleController::class, ['except' => ['show']]);
     Route::get('/file-manager', [FileManagerController::class, 'index'])->name('file-manager.index');
+    Route::post('/ckeditor-upload', [FileManagerController::class, 'ckeditorUpload'])->name('ckeditor.upload')->withoutMiddleware([Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
     Route::get('monitor', [ResourceMonitorController::class, 'index'])->name('monitor.index');
     // Project Management Routes
     Route::resource('/projects', ProjectController::class);
