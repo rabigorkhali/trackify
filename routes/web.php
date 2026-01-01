@@ -59,7 +59,6 @@ Route::get('/', [IndexController::class, 'index'])->name('index');
 Route::get('/', [HomeController::class, 'index'])->name('home.index');
 
 Route::prefix(getSystemPrefix())->middleware(['auth', 'permission.routes', 'log'])->group(function () {
-    Route::get('/generate-sitemap', [HomeController::class, 'generateSitemap'])->name('generateSitemap');
     Route::get('/home', [HomeController::class, 'index'])->name('home.index');
     Route::get('/admin', [HomeController::class, 'index'])->name('home.index');
     Route::get('/login', [HomeController::class, 'index'])->name('home.index');

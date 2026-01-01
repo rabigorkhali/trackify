@@ -4,12 +4,6 @@
     <div class="container-xxl">
         @include('backend.system.partials.errors')
         <div class="row justify-content-center">
-            @if(hasPermission('/generate-sitemap','get'))
-                <div class="col-md-2 mb-2">
-                    <a href="{{ route('generateSitemap') }}" class="btn btn-primary w-100">Generate Sitemap</a>
-                </div>
-            @endif
-
             @if(hasPermission('/backup-database','get'))
                 <div class="col-md-3 mb-2">
                     <a href="{{ route('backup.database') }}" class="btn btn-primary w-100">

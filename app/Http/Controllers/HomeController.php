@@ -2,10 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Course;
 use App\Models\Page;
 use App\Models\Post;
-use App\Models\Service;
 use App\Models\Project;
 use App\Models\Ticket;
 use App\Models\TicketStatus;
@@ -15,9 +13,6 @@ use App\Models\Testimonial;
 use App\Models\Team;
 use App\Models\ContactUs;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\URL;
-use Spatie\Sitemap\Sitemap;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Config;
 use ZipArchive;
@@ -126,79 +121,6 @@ class HomeController extends Controller
         ));
     }
 
-    public function generateSitemap()
-    {
-        try {
-            /* SITE MAP FOR POST */
-            $sitemap = Sitemap::create();
-            $sitemap->add(URL::to('/'), date('y-m-d'), '1.0', 'daily'); //static url
-//            $sitemap->add(URL::to('page'), '2012-08-26T12:30:00+02:00', '0.9', 'monthly');
-            $posts = Post::where('status', 1)->orderBy('created_at', 'desc')->get();
-            foreach ($posts as $post) {
-                $sitemap->add(URL::to('/') . '/blogs/' . $post->slug, $post->updated_at, 0.9, 'daily');
-            }
-            $sitemapXml = $sitemap->render('xml');
-            $sitemapXml = preg_replace('/^.*?(?=<\?xml version)/s', '', $sitemapXml);
-            $filePath = base_path('sitemap_post.xml');
-            File::put($filePath, $sitemapXml);
-            /* SITE MAP FOR POST */
-
-
-            /* SITE MAP FOR PAGE */
-            $sitemap = Sitemap::create();
-            $sitemap->add(URL::to('/'), date('y-m-d'), '1.0', 'daily'); //static url
-            $posts = Page::where('status', 1)->orderBy('created_at', 'desc')->get();
-            foreach ($posts as $post) {
-                $sitemap->add(URL::to('/') . '/' . $post->slug, $post->updated_at, 0.9, 'monthly');
-            }
-            $sitemapXml = $sitemap->render('xml');
-            $sitemapXml = preg_replace('/^.*?(?=<\?xml version)/s', '', $sitemapXml);
-            $filePath = base_path('sitemap_page.xml');
-            File::put($filePath, $sitemapXml);
-            /* SITE MAP FOR PAGE */
-
-            /* SITE MAP FOR COURSE */
-            $sitemap = Sitemap::create();
-            $sitemap->add(URL::to('/'), date('y-m-d'), '1.0', 'daily'); //static url
-            $posts = Course::where('status', 1)->orderBy('created_at', 'desc')->get();
-            foreach ($posts as $post) {
-                $sitemap->add(URL::to('/') . '/course/' . $post->slug, $post->updated_at, 0.9, 'monthly');
-            }
-            $sitemapXml = $sitemap->render('xml');
-            $sitemapXml = preg_replace('/^.*?(?=<\?xml version)/s', '', $sitemapXml);
-            $filePath = base_path('sitemap_course.xml');
-            File::put($filePath, $sitemapXml);
-            /* SITE MAP FOR COURSE */
-
-            /* SITE MAP FOR SERVICE */
-            $sitemap = Sitemap::create();
-            $sitemap->add(URL::to('/'), date('y-m-d'), '1.0', 'daily'); //static url
-            $posts = Service::where('status', 1)->orderBy('created_at', 'desc')->get();
-            foreach ($posts as $post) {
-                $sitemap->add(URL::to('/') . '/service/' . $post->slug, $post->updated_at, 0.9, 'monthly');
-            }
-            $sitemapXml = $sitemap->render('xml');
-            $sitemapXml = preg_replace('/^.*?(?=<\?xml version)/s', '', $sitemapXml);
-            $filePath = base_path('sitemap_service.xml');
-            File::put($filePath, $sitemapXml);
-            /* SITE MAP FOR SERVICE */
-
-            /* SITE MAP FOR COURSE */
-            $sitemap = Sitemap::create();
-            $sitemap->add(URL::to('/sitemap_page.xml'));
-            $sitemap->add(URL::to('/sitemap_post.xml'));
-            $sitemap->add(URL::to('/sitemap_course.xml'));
-            $sitemap->add(URL::to('/sitemap_service.xml'));
-            $sitemapXml = $sitemap->render('xml');
-            $sitemapXml = preg_replace('/^.*?(?=<\?xml version)/s', '', $sitemapXml);
-            $filePath = base_path('sitemap.xml');
-            File::put($filePath, $sitemapXml);
-            /* SITE MAP FOR COURSE */
-            return redirect()->back()->with('success', 'Sitemap generated successfully!');
-        } catch (\Throwable $throwable) {
-            return redirect()->back()->with('error', $throwable->getMessage());
-        }
-    }
     /**
      * Download database backup
      *

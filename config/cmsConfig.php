@@ -197,13 +197,6 @@ return [
                         'method' => $getMethod,
                     ],
                 ],
-                [
-                    'name' => 'Generate Sitemap',
-                    'route' => [
-                        'url' => '/generate-sitemap',
-                        'method' => $getMethod,
-                    ],
-                ],
             ],
         ],
 
@@ -1302,13 +1295,6 @@ return [
                             'route' => [
                                 'url' => $configBaseUrl.'/*',
                                 'method' => $deleteMethod,
-                            ],
-                        ],
-                        [
-                            'name' => 'Generate Sitemap',
-                            'route' => [
-                                'url' => '/generate-sitemap',
-                                'method' => $getMethod,
                             ],
                         ],
                         [
