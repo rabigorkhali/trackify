@@ -9,23 +9,8 @@ $homeBaseUrl = '/home';
 $userBaseUrl = '/users';
 $roleBaseUrl = '/roles';
 $configBaseUrl = '/configs';
-$pageBaseUrl = '/pages';
 $fileManagerUrl = '/file-manager';
-$postCategoryUrl = '/post-categories';
-$postUrl = '/posts';
-$testimonialUrl = '/testimonials';
-$teamUrl = '/teams';
-$contactUsUrl = '/contact-us';
-$eventUrl = '/events';
-$menuBaseUrl = '/menus';
 $monitorUrl = '/monitor';
-$redirectionUrl = '/redirections';
-$activityUrl = '/activities';
-$partnerUrl = '/partners';
-$sliderUrl = '/sliders';
-$newsletterSubscriptionUrl = '/newsletter-subscriptions';
-$emailUrl = '/emails';
-$smsUrl = '/sms';
 $projectUrl = '/projects';
 $ticketUrl = '/tickets';
 $ticketStatusUrl = '/ticket-statuses';
@@ -1235,7 +1220,7 @@ return [
             'icon' => "<i class='fa fa-cogs'></i>",
             'hasSubmodules' => true,
             'routeName' => 'system-configuration',
-            'routeIndexNameMultipleSubMenu' => ['file-manager.index', 'configs.index', 'menus.index'],
+            'routeIndexNameMultipleSubMenu' => ['file-manager.index', 'configs.index'],
             'submodules' => [
                 [
                     'name' => 'File Manager',
@@ -1360,25 +1345,8 @@ return [
             'icon' => "<i class='fa fa-chart-line'></i>",
             'hasSubmodules' => true,
             'routeName' => 'monitoring-maintenance',
-            'routeIndexNameMultipleSubMenu' => ['activities.index', 'monitor.index'],
+            'routeIndexNameMultipleSubMenu' => ['monitor.index'],
             'submodules' => [
-                [
-                    'name' => 'Activities Tracking',
-                    'icon' => "<i class='fa fa-video-camera'></i>",
-                    'hasSubmodules' => false,
-                    'route' => $activityUrl,
-                    'routeIndexName' => 'activities.index',
-                    'routeName' => 'activities',
-                    'permissions' => [
-                        [
-                            'name' => 'View Activity',
-                            'route' => [
-                                'url' => $activityUrl,
-                                'method' => $getMethod,
-                            ],
-                        ],
-                    ],
-                ],
                 [
                     'name' => 'Resource Monitor',
                     'icon' => "<i class='fa fa-campground'></i>",

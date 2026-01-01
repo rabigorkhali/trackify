@@ -108,24 +108,6 @@
             </div>
             @endif
 
-            @if(hasPermission('/posts', 'get'))
-            <div class="col-lg-3 col-md-6 mb-4">
-                <div class="card shadow h-100" style="border-left: 4px solid #fb6340;">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-grow-1">
-                                <div class="text-xs fw-bold text-warning text-uppercase mb-1">Total Posts</div>
-                                <div class="h5 mb-0 fw-bold text-gray-800">{{ $totalPosts ?? 0 }}</div>
-                                <small class="text-muted">Content items</small>
-                            </div>
-                            <div class="ms-3">
-                                <i class="fa fa-file-alt fa-2x text-warning"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            @endif
         </div>
 
         <!-- Charts Row -->
@@ -307,69 +289,6 @@
             @endif
                     </div>
 
-        <!-- Additional Content Statistics -->
-        @if(hasPermission('/events', 'get') || hasPermission('/testimonials', 'get') || hasPermission('/teams', 'get') || hasPermission('/contact-us', 'get'))
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card shadow">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Content Overview</h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            @if(hasPermission('/events', 'get'))
-                            <div class="col-md-3 col-sm-6 mb-3">
-                                <div class="d-flex align-items-center p-3 bg-light rounded">
-                                    <i class="fa fa-calendar-alt fa-2x text-primary me-3"></i>
-                                    <div>
-                                        <h5 class="mb-0">{{ $totalEvents ?? 0 }}</h5>
-                                        <small class="text-muted">Events</small>
-                                    </div>
-                                </div>
-                            </div>
-                            @endif
-
-                            @if(hasPermission('/testimonials', 'get'))
-                            <div class="col-md-3 col-sm-6 mb-3">
-                                <div class="d-flex align-items-center p-3 bg-light rounded">
-                                    <i class="fa fa-star fa-2x text-warning me-3"></i>
-                                    <div>
-                                        <h5 class="mb-0">{{ $totalTestimonials ?? 0 }}</h5>
-                                        <small class="text-muted">Testimonials</small>
-                                    </div>
-                                </div>
-                            </div>
-                            @endif
-
-                            @if(hasPermission('/teams', 'get'))
-                            <div class="col-md-3 col-sm-6 mb-3">
-                                <div class="d-flex align-items-center p-3 bg-light rounded">
-                                    <i class="fa fa-users fa-2x text-success me-3"></i>
-                                    <div>
-                                        <h5 class="mb-0">{{ $totalTeams ?? 0 }}</h5>
-                                        <small class="text-muted">Team Members</small>
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-
-                            @if(hasPermission('/contact-us', 'get'))
-                            <div class="col-md-3 col-sm-6 mb-3">
-                                <div class="d-flex align-items-center p-3 bg-light rounded">
-                                    <i class="fa fa-envelope fa-2x text-info me-3"></i>
-                                    <div>
-                                        <h5 class="mb-0">{{ $totalContactUs ?? 0 }}</h5>
-                                        <small class="text-muted">Contact Messages</small>
-                                    </div>
-                                </div>
-                            </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        @endif
     </div>
 
 @section('scripts')

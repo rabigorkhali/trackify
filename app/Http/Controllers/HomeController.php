@@ -2,16 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Page;
-use App\Models\Post;
 use App\Models\Project;
 use App\Models\Ticket;
 use App\Models\TicketStatus;
 use App\Models\User;
-use App\Models\Event;
-use App\Models\Testimonial;
-use App\Models\Team;
-use App\Models\ContactUs;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Config;
@@ -78,14 +72,6 @@ class HomeController extends Controller
         $totalUsers = User::count();
         $activeUsers = User::where('status', 1)->count();
         
-        // Content Statistics
-        $totalPosts = Post::count();
-        $totalPages = Page::count();
-        $totalEvents = Event::count();
-        $totalTestimonials = Testimonial::count();
-        $totalTeams = Team::count();
-        $totalContactUs = ContactUs::count();
-        
         // Ticket trends (last 7 days)
         $ticketTrends = [];
         for ($i = 6; $i >= 0; $i--) {
@@ -110,12 +96,6 @@ class HomeController extends Controller
             'recentTickets',
             'totalUsers',
             'activeUsers',
-            'totalPosts',
-            'totalPages',
-            'totalEvents',
-            'totalTestimonials',
-            'totalTeams',
-            'totalContactUs',
             'ticketTrends',
             'projectsWithStats'
         ));

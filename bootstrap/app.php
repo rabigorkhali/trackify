@@ -18,8 +18,6 @@ return Application::configure(basePath: dirname(__DIR__))
 
         ]);
 
-        $middleware->append(\App\Http\Middleware\RedirectionMiddleware::class);
-
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
