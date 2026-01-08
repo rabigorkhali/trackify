@@ -817,6 +817,9 @@ $priorityColors = [
             let descriptionQuill = null;
             let createDescriptionQuill = null;
 
+            // Store modal instance to prevent multiple instances
+            let editTicketModalInstance = null;
+
             function initializeMentions() {
                 const commentTextarea = document.getElementById('new_comment');
                 if (!commentTextarea || tribute) return;
@@ -1125,6 +1128,15 @@ $priorityColors = [
                 });
             });
 
+            // Cleanup modal backdrop function
+            function cleanupModalBackdrop() {
+                const backdrops = document.querySelectorAll('.modal-backdrop');
+                backdrops.forEach(backdrop => backdrop.remove());
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+            }
+
             // Notification function
             function showNotification(message, type = 'info') {
                 const alertClass = type === 'success' ? 'alert-success' : (type === 'info' ? 'alert-info' :
@@ -1140,18 +1152,50 @@ $priorityColors = [
                 setTimeout(() => notification.remove(), 3000);
             }
 
-            // Reset modal when hidden
-            const editTicketModal = document.getElementById('editTicketModal');
-            if (editTicketModal) {
-                editTicketModal.addEventListener('hidden.bs.modal', function() {
+            // Initialize modal instance once
+            const editTicketModalElement = document.getElementById('editTicketModal');
+            if (editTicketModalElement && !editTicketModalInstance) {
+                editTicketModalInstance = new bootstrap.Modal(editTicketModalElement, {
+                    backdrop: true,
+                    keyboard: true,
+                    focus: true
+                });
+
+                // Reset modal when hidden and ensure backdrop is removed
+                editTicketModalElement.addEventListener('hidden.bs.modal', function() {
                     // Force clear all content when modal closes
                     document.getElementById('ticket_attachments_list').innerHTML = '';
                     document.getElementById('attachments_count').textContent = '0';
                     document.getElementById('comments_list').innerHTML = '';
                     document.getElementById('comments_count').textContent = '0';
                     document.getElementById('activity_list').innerHTML = '';
-                    console.log('Modal closed - cleared all data');
+                    
+                    // Force cleanup backdrop
+                    cleanupModalBackdrop();
+                    
+                    console.log('Modal closed - cleared all data and backdrop');
                 });
+
+                // Ensure backdrop is removed on hide
+                editTicketModalElement.addEventListener('hide.bs.modal', function() {
+                    // This fires before the modal is hidden
+                });
+
+                // Handle close button clicks explicitly
+                const closeButton = editTicketModalElement.querySelector('.btn-close[data-bs-dismiss="modal"]');
+                if (closeButton) {
+                    closeButton.addEventListener('click', function(e) {
+                        // Hide modal properly
+                        if (editTicketModalInstance) {
+                            editTicketModalInstance.hide();
+                        }
+                        
+                        // Force cleanup after a short delay to ensure backdrop is removed
+                        setTimeout(() => {
+                            cleanupModalBackdrop();
+                        }, 150);
+                    });
+                }
             }
 
         // Global function to open ticket modal with full details
@@ -1260,9 +1304,24 @@ $priorityColors = [
                                 initializeMentions();
                             }, 100);
 
-                            // Open modal
-                            const modal = new bootstrap.Modal(document.getElementById('editTicketModal'));
-                            modal.show();
+                            // Open modal using stored instance
+                            if (!editTicketModalInstance) {
+                                const modalElement = document.getElementById('editTicketModal');
+                                if (modalElement) {
+                                    editTicketModalInstance = new bootstrap.Modal(modalElement, {
+                                        backdrop: true,
+                                        keyboard: true,
+                                        focus: true
+                                    });
+                                }
+                            }
+                            
+                            if (editTicketModalInstance) {
+                                // Ensure any existing backdrop is removed first
+                                cleanupModalBackdrop();
+                                
+                                editTicketModalInstance.show();
+                            }
                         }
                     })
                     .catch(error => {
