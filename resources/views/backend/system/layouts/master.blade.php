@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en" class="light-style layout-navbar-fixed layout-menu-fixed layout-compact" dir="ltr"
       data-theme="theme-default" data-assets-path="{{ asset('assets/') . '/' }}" data-template="vertical-menu-template">
-
+<title>Trackify  {{ $title ?? '' }}</title>
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport"
