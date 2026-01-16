@@ -104,11 +104,17 @@
                 </form>
 
                 <!-- Kanban Board -->
-                <div class="kanban-container" style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 20px;">
+                <!-- Top Horizontal Scroll Bar -->
+                <div class="kanban-scroll-top" style="overflow-x: auto; overflow-y: hidden; margin-bottom: 10px; height: 20px;">
+                    <div class="kanban-scroll-content"></div>
+                </div>
+                
+                <!-- Main Kanban Container -->
+                <div class="kanban-container" style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 20px; max-height: calc(100vh - 250px); overflow-y: auto;">
                     @foreach ($ticketStatuses as $status)
                         <div class="kanban-column"
-                            style="min-width: 350px; background: #f8f9fa; border-radius: 10px; padding: 15px;">
-                            <div class="kanban-header" style="margin-bottom: 15px;">
+                            style="min-width: 350px; background: #f8f9fa; border-radius: 10px; padding: 15px; display: flex; flex-direction: column; height: fit-content;">
+                            <div class="kanban-header" style="margin-bottom: 15px; flex-shrink: 0;">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <div class="d-flex align-items-center gap-2">
                                         <span class="badge"
@@ -128,7 +134,7 @@
                                         style="font-size: 0.85rem;">{{ $status->tickets->count() }}</span>
                                 </div>
                             </div>
-                            <div class="kanban-list" data-status-id="{{ $status->id }}" style="min-height: 200px;">
+                            <div class="kanban-list" data-status-id="{{ $status->id }}" style="min-height: 200px; max-height: calc(100vh - 350px); overflow-y: auto; flex-grow: 1;">
                                 @foreach ($status->tickets as $ticket)
                                     <div class="kanban-item global-ticket-card" data-ticket-id="{{ $ticket->id }}"
                                         data-project-id="{{ $ticket->project_id }}"
@@ -806,6 +812,43 @@ $priorityColors = [
             const kanbanLists = document.querySelectorAll('.kanban-list');
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
                 '{{ csrf_token() }}';
+
+            // Synchronize top and bottom horizontal scrollbars
+            const kanbanContainer = document.querySelector('.kanban-container');
+            const topScrollbar = document.querySelector('.kanban-scroll-top');
+            const topScrollContent = document.querySelector('.kanban-scroll-content');
+
+            // Set the width of top scroll content to match kanban container's scroll width
+            function updateTopScrollWidth() {
+                if (kanbanContainer && topScrollContent) {
+                    topScrollContent.style.width = kanbanContainer.scrollWidth + 'px';
+                    topScrollContent.style.height = '20px';
+                }
+            }
+
+            // Sync scroll positions
+            if (kanbanContainer && topScrollbar) {
+                // Sync main container scroll to top scrollbar
+                kanbanContainer.addEventListener('scroll', function() {
+                    topScrollbar.scrollLeft = kanbanContainer.scrollLeft;
+                });
+
+                // Sync top scrollbar scroll to main container
+                topScrollbar.addEventListener('scroll', function() {
+                    kanbanContainer.scrollLeft = topScrollbar.scrollLeft;
+                });
+
+                // Update width on load and resize
+                updateTopScrollWidth();
+                window.addEventListener('resize', updateTopScrollWidth);
+                
+                // Update after a short delay to ensure content is loaded
+                setTimeout(updateTopScrollWidth, 500);
+                setTimeout(updateTopScrollWidth, 1000);
+                
+                // Make updateTopScrollWidth globally accessible for dynamic updates
+                window.updateKanbanScrollWidth = updateTopScrollWidth;
+            }
 
             // Users list for mentions
             const usersList = @json($userListData);
@@ -2187,13 +2230,15 @@ $priorityColors = [
             cursor: grabbing !important;
         }
 
+        /* Kanban Container Scrollbars */
         .kanban-container {
             scrollbar-width: thin;
             scrollbar-color: #cbd5e0 #f7fafc;
         }
 
         .kanban-container::-webkit-scrollbar {
-            height: 10px;
+            height: 12px;
+            width: 12px;
         }
 
         .kanban-container::-webkit-scrollbar-track {
@@ -2207,6 +2252,66 @@ $priorityColors = [
         }
 
         .kanban-container::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+
+        /* Top Horizontal Scrollbar Styling */
+        .kanban-scroll-top {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e0 #f7fafc;
+            background: #f8f9fa;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 0;
+            min-height: 20px;
+            display: block;
+        }
+
+        .kanban-scroll-top::-webkit-scrollbar {
+            height: 14px;
+        }
+
+        .kanban-scroll-top::-webkit-scrollbar-track {
+            background: #f7fafc;
+            border-radius: 6px;
+            margin: 2px;
+        }
+
+        .kanban-scroll-top::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 6px;
+            border: 2px solid #f7fafc;
+        }
+
+        .kanban-scroll-top::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+
+        .kanban-scroll-content {
+            display: block;
+        }
+
+        /* Kanban List (Column) Vertical Scrollbar */
+        .kanban-list {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e0 #f7fafc;
+        }
+
+        .kanban-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .kanban-list::-webkit-scrollbar-track {
+            background: #f0f0f4;
+            border-radius: 6px;
+        }
+
+        .kanban-list::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 6px;
+        }
+
+        .kanban-list::-webkit-scrollbar-thumb:hover {
             background: #a0aec0;
         }
 
