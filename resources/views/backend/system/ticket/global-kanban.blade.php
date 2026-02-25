@@ -539,6 +539,19 @@ $priorityColors = [
                                                 min="0" max="100" />
                                         </div>
 
+                                        <!-- Ticket link (copy URL) -->
+                                        <div class="col-12">
+                                            <label class="form-label"><i class="ti ti-link me-1"></i>Ticket link</label>
+                                            <div class="input-group input-group-sm">
+                                                <input type="text" class="form-control form-control-sm" id="view_ticket_url" readonly
+                                                    placeholder="Open a ticket to see link"
+                                                    style="font-size: 0.8rem;">
+                                                <button type="button" class="btn btn-outline-primary" id="copy_ticket_url_btn" title="Copy link">
+                                                    <i class="ti ti-copy"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
                                         <!-- Divider -->
                                         <div class="col-12">
                                             <hr class="my-2">
@@ -1207,6 +1220,8 @@ $priorityColors = [
                 // Reset modal when hidden and ensure backdrop is removed
                 editTicketModalElement.addEventListener('hidden.bs.modal', function() {
                     // Force clear all content when modal closes
+                    const urlInput = document.getElementById('view_ticket_url');
+                    if (urlInput) urlInput.value = '';
                     document.getElementById('ticket_attachments_list').innerHTML = '';
                     document.getElementById('attachments_count').textContent = '0';
                     document.getElementById('comments_list').innerHTML = '';
@@ -1223,6 +1238,24 @@ $priorityColors = [
                 editTicketModalElement.addEventListener('hide.bs.modal', function() {
                     // This fires before the modal is hidden
                 });
+
+                // Copy ticket URL to clipboard
+                const copyTicketUrlBtn = document.getElementById('copy_ticket_url_btn');
+                if (copyTicketUrlBtn) {
+                    copyTicketUrlBtn.addEventListener('click', function() {
+                        const urlInput = document.getElementById('view_ticket_url');
+                        if (urlInput && urlInput.value) {
+                            urlInput.select();
+                            urlInput.setSelectionRange(0, 99999);
+                            navigator.clipboard.writeText(urlInput.value).then(function() {
+                                showNotification('Link copied to clipboard', 'success');
+                            }).catch(function() {
+                                document.execCommand('copy');
+                                showNotification('Link copied to clipboard', 'success');
+                            });
+                        }
+                    });
+                }
 
                 // Handle close button clicks explicitly
                 const closeButton = editTicketModalElement.querySelector('.btn-close[data-bs-dismiss="modal"]');
@@ -1306,6 +1339,14 @@ $priorityColors = [
                             document.getElementById('edit_ticket_id').value = ticket.id;
                             document.getElementById('edit_project_id').value = projectId;
                             document.getElementById('comment_ticket_id').value = ticket.id;
+
+                            // Set ticket show URL for copying
+                            const ticketUrl = `{{ url('') }}/{{ getSystemPrefix() }}/projects/${projectId}/tickets/${ticket.id}/show`;
+                            const urlInput = document.getElementById('view_ticket_url');
+                            if (urlInput) {
+                                urlInput.value = ticketUrl;
+                            }
+
                             console.log('Form fields set - edit_ticket_id:', document.getElementById('edit_ticket_id').value);
                             document.getElementById('edit_ticket_status_id').value = ticket.ticket_status_id ||
                                 '';
