@@ -7,6 +7,7 @@ use App\Http\Controllers\System\FileManagerController;
 use App\Http\Controllers\System\NotificationController;
 use App\Http\Controllers\System\ProfileController;
 use App\Http\Controllers\System\ProjectController;
+use App\Http\Controllers\System\ReportController;
 use App\Http\Controllers\System\ResourceMonitorController;
 use App\Http\Controllers\System\RoleController;
 use App\Http\Controllers\System\TicketAttachmentController;
@@ -63,6 +64,10 @@ Route::prefix(getSystemPrefix())->middleware(['auth', 'permission.routes', 'log'
 
     // Global Kanban Board
     Route::get('/kanban', [TicketController::class, 'globalKanban'])->name('kanban.index');
+
+    // Bug / Ticket Reports
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/export', [ReportController::class, 'export'])->name('reports.export');
 
     // Nested Tickets under Projects
     Route::prefix('projects/{project}')->group(function () {

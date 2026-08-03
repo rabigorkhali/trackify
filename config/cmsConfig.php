@@ -15,6 +15,7 @@ $projectUrl = '/projects';
 $ticketUrl = '/tickets';
 $ticketStatusUrl = '/ticket-statuses';
 $ticketLabelUrl = '/ticket-labels';
+$reportUrl = '/reports';
 
 return [
     // routes entered in this array are accessible by any user no matter what role is given
@@ -1373,7 +1374,7 @@ return [
             'icon' => "<i class='fa fa-tasks'></i>",
             'hasSubmodules' => true,
             'routeName' => 'project-management',
-            'routeIndexNameMultipleSubMenu' => ['projects.index', 'tickets.index', 'kanban.index', 'ticket-statuses.index', 'ticket-labels.index'],
+            'routeIndexNameMultipleSubMenu' => ['projects.index', 'tickets.index', 'kanban.index', 'reports.index', 'ticket-statuses.index', 'ticket-labels.index'],
             'submodules' => [
                 [
                     'name' => 'Projects',
@@ -1500,6 +1501,30 @@ return [
                             'name' => 'View Global Kanban',
                             'route' => [
                                 'url' => '/kanban',
+                                'method' => $getMethod,
+                            ],
+                        ],
+                    ],
+                ],
+                [
+                    'name' => 'Bug Reports',
+                    'icon' => "<i class='fa fa-chart-bar'></i>",
+                    'hasSubmodules' => false,
+                    'route' => $reportUrl,
+                    'routeIndexName' => 'reports.index',
+                    'routeName' => 'reports',
+                    'permissions' => [
+                        [
+                            'name' => 'View Bug Reports',
+                            'route' => [
+                                'url' => $reportUrl,
+                                'method' => $getMethod,
+                            ],
+                        ],
+                        [
+                            'name' => 'Export Bug Reports',
+                            'route' => [
+                                'url' => $reportUrl.'/export',
                                 'method' => $getMethod,
                             ],
                         ],
